@@ -181,3 +181,29 @@ def test_create_dir():
 
 def test_create_raw_file():
     assert os.path.isfile('tests/env2/thing')
+
+
+ENV3_SPEC = {
+    'dir':  {
+        'path': 'tests/env3',
+        'create': True,
+        'relative': True,
+        'cleanup': True
+    },
+    'files': {
+        'test': {
+            'type':     'raw',
+            'create':   True,
+            'cleanup':  True
+        }
+    },
+    'basename': 'test'
+}
+
+# env 3
+def test_cleanup():
+    with Environment(ENV3_SPEC) as env:
+        pass
+    assert not os.path.isfile('tests/env3/test')
+
+

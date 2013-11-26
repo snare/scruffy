@@ -13,6 +13,14 @@ class Environment(object):
         self.basename = spec['basename']
         self.files = {}
 
+        # apply defaults
+        self.spec['dir'] = self.merge_dicts(self.spec['dir'],  {
+            'create': False,
+            'relative': False,
+            'cleanup': False,
+            'mode': 0700
+        })
+
         # set up environment directory
         self.dir = os.path.expanduser(self.spec['dir']['path'])
         if self.spec['dir']['create']:
@@ -44,7 +52,9 @@ class Environment(object):
             d = {
                 'type': 'raw',
                 'read': False,
-                'create': False
+                'create': False,
+                'cleanup': False,
+                'mode': 0700
             }
             fspec = self.merge_dicts(fspec, d)
 
@@ -68,7 +78,8 @@ class Environment(object):
             # create file
             if 'create' in fspec and fspec['create']:
                 if not os.path.isfile(fspec['path']):
-                    f = open(fspec['path'], 'w+')
+                    fd = os.open(fspec['path'], os.O_WRONLY | os.O_CREAT, fspec['mode'])
+                    f = os.fdopen(fd, 'w')
                     f.close()
 
             # load file
@@ -183,12 +194,18 @@ class Environment(object):
 
         return spec
 
-    def clean_up():
+    def clean_up(self):
         """Clean up the environment"""
 
-        for f in self.spec['files']:
-            if f['cleanup']:
-                os.remove(path_to(f['name']))
+        # remove any files that need to be cleaned up
+        for name in self.spec['files']:
+            fspec = self.spec['files'][name]
+            if 'cleanup' in fspec and fspec['cleanup']:
+                os.unlink(self.path_to(name))
+
+        # remove the directory if necessary
+        if self.spec['dir']['cleanup']:
+            os.rmdir(self.dir)
 
     def merge_dicts(self, d1, d2):
         """Merge two dictionaries"""
