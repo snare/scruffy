@@ -124,7 +124,7 @@ def test_file_basename():
     assert ENV1.spec['files']['bn_file']['name'] == 'test.txt'
 
 def test_no_read():
-    assert ENV1['no_read'] == 'no_read_file'
+    assert ENV1['no_read'] == 'tests/env1/no_read_file'
 
 # config1
 def test_config1_dict():

@@ -106,7 +106,7 @@ class Environment(object):
                     # no idea, just load it as raw
                     self.files[name] = self.load_raw(fspec)
             else:
-                self.files[name] = fspec['name']
+                self.files[name] = self.path_to(fspec['name'])
 
     def load_config(self, spec):
         """Load a JSON configuration file"""
