@@ -45,7 +45,12 @@ class Environment(object):
     def init_files(self):
         """Initialise files"""
 
-        for name in self.spec['files']:
+        # Always load config first, to ensure that any basename etc changes have applied
+
+        configs = filter(lambda i: self.spec['files'][i]['type'] == 'config', self.spec['files'])
+        others = filter(lambda i: i not in configs, self.spec['files'])
+
+        for name in (configs + others):
             fspec = self.spec['files'][name]
 
             # apply defaults
@@ -89,13 +94,12 @@ class Environment(object):
                     self.files[name] = self.load_config(fspec)
 
                     # if there was a basename variable specified in the config, grab the contents of it
-                    if not self.basename:
-                        if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
-                            bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
-                            if len(bn) > 0:
-                                if len(self.basename) > MAX_BASENAME:
-                                    bn = bn[-MAX_BASENAME:]
-                                self.basename = bn
+                    if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
+                        bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
+                        if len(bn) > 0:
+                            if len(bn) > MAX_BASENAME:
+                                bn = bn[-MAX_BASENAME:]
+                            self.basename = bn
                 elif fspec['type'] == 'json':
                     # load as a json file
                     self.files[name] = self.load_json(fspec)
@@ -113,20 +117,29 @@ class Environment(object):
 
         # load default config
         config = {}
-        if 'default' in spec:
-            # find where the default configuration is
-            if spec['default']['rel_to'] == 'pkg':
-                path = pkg_resources.resource_filename(spec['default']['pkg'], spec['default']['path'])
-            elif spec['default']['rel_to'] == 'pwd':
-                path = os.path.join(os.getcwd(), spec['default']['path'])
-            elif spec['default']['rel_to'] == 'abs':
-                path = spec['default']['path']
+        if 'files' not in spec:
+            return config
 
-            # load it
-            try:
-                config = self.parse_json(file(path).read())
-            except ValueError, e:
-                raise IOError("Error parsing default configuration" + e.message)
+        for candidate in spec['files']:
+            # find where the default configuration is
+            if candidate['rel_to'] == 'pkg':
+                path = pkg_resources.resource_filename(candidate['pkg'], candidate['path'])
+            elif candidate['rel_to'] == 'pwd':
+                path = os.path.join(os.getcwd(), candidate['path'])
+            elif candidate['rel_to'] == 'abs':
+                path = candidate['path']
+            elif candidate['rel_to'] == 'home':
+                path = os.path.join(os.path.expanduser("~"), candidate['path'])
+
+            if os.path.exists(path):
+                break
+
+
+        # load it
+        try:
+            config = self.parse_json(file(path).read())
+        except ValueError, e:
+            raise IOError("Error parsing default configuration" + e.message)
 
         # load local config
         try:
