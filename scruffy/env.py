@@ -94,13 +94,12 @@ class Environment(object):
                     self.files[name] = self.load_config(fspec)
 
                     # if there was a basename variable specified in the config, grab the contents of it
-                    if not self.basename:
-                        if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
-                            bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
-                            if len(bn) > 0:
-                                if len(self.basename) > MAX_BASENAME:
-                                    bn = bn[-MAX_BASENAME:]
-                                self.basename = bn
+                    if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
+                        bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
+                        if len(bn) > 0:
+                            if len(self.basename) > MAX_BASENAME:
+                                bn = bn[-MAX_BASENAME:]
+                            self.basename = bn
                 elif fspec['type'] == 'json':
                     # load as a json file
                     self.files[name] = self.load_json(fspec)
