@@ -113,20 +113,29 @@ class Environment(object):
 
         # load default config
         config = {}
-        if 'default' in spec:
-            # find where the default configuration is
-            if spec['default']['rel_to'] == 'pkg':
-                path = pkg_resources.resource_filename(spec['default']['pkg'], spec['default']['path'])
-            elif spec['default']['rel_to'] == 'pwd':
-                path = os.path.join(os.getcwd(), spec['default']['path'])
-            elif spec['default']['rel_to'] == 'abs':
-                path = spec['default']['path']
+        if 'files' not in spec:
+            return config
 
-            # load it
-            try:
-                config = self.parse_json(file(path).read())
-            except ValueError, e:
-                raise IOError("Error parsing default configuration" + e.message)
+        for candidate in spec['files']:
+            # find where the default configuration is
+            if candidate['rel_to'] == 'pkg':
+                path = pkg_resources.resource_filename(candidate['pkg'], candidate['path'])
+            elif candidate['rel_to'] == 'pwd':
+                path = os.path.join(os.getcwd(), candidate['path'])
+            elif candidate['rel_to'] == 'abs':
+                path = candidate['path']
+            elif candidate['rel_to'] == 'home':
+                path = os.path.join(os.path.expanduser("~"), candidate['path'])
+
+            if os.path.exists(path):
+                break
+
+
+        # load it
+        try:
+            config = self.parse_json(file(path).read())
+        except ValueError, e:
+            raise IOError("Error parsing default configuration" + e.message)
 
         # load local config
         try:
