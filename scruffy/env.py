@@ -98,7 +98,7 @@ class Environment(object):
                     if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
                         bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
                         if len(bn) > 0:
-                            if len(self.basename) > MAX_BASENAME:
+                            if len(bn) > MAX_BASENAME:
                                 bn = bn[-MAX_BASENAME:]
                             self.basename = bn
                 elif fspec['type'] == 'json':
