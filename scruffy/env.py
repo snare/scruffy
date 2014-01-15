@@ -45,7 +45,12 @@ class Environment(object):
     def init_files(self):
         """Initialise files"""
 
-        for name in self.spec['files']:
+        # Always load config first, to ensure that any basename etc changes have applied
+
+        configs = filter(lambda i: self.spec['files'][i]['type'] == 'config', self.spec['files'])
+        others = filter(lambda i: i not in configs, self.spec['files'])
+
+        for name in (configs + others):
             fspec = self.spec['files'][name]
 
             # apply defaults
