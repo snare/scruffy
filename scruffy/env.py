@@ -46,7 +46,7 @@ class Environment(object):
         """Initialise files"""
 
         # initialise files, loading any config files first to ensure that any basename etc changes have applied
-        configs = filter(lambda i: self.spec['files'][i]['type'] == 'config', self.spec['files'])
+        configs = filter(lambda i: 'type' in self.spec['files'][i] and self.spec['files'][i]['type'] == 'config', self.spec['files'])
         others = filter(lambda i: i not in configs, self.spec['files'])
 
         for name in (configs + others):
