@@ -45,7 +45,11 @@ class Environment(object):
     def init_files(self):
         """Initialise files"""
 
-        for name in self.spec['files']:
+        # initialise files, loading any config files first to ensure that any basename etc changes have applied
+        configs = filter(lambda i: self.spec['files'][i]['type'] == 'config', self.spec['files'])
+        others = filter(lambda i: i not in configs, self.spec['files'])
+
+        for name in (configs + others):
             fspec = self.spec['files'][name]
 
             # apply defaults
@@ -88,14 +92,15 @@ class Environment(object):
                     # load as a config file
                     self.files[name] = self.load_config(fspec)
 
+                    print(str(self.files[name]))
+
                     # if there was a basename variable specified in the config, grab the contents of it
-                    if not self.basename:
-                        if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
-                            bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
-                            if len(bn) > 0:
-                                if len(self.basename) > MAX_BASENAME:
-                                    bn = bn[-MAX_BASENAME:]
-                                self.basename = bn
+                    if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
+                        bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
+                        if len(bn) > 0:
+                            if len(self.basename) > MAX_BASENAME:
+                                bn = bn[-MAX_BASENAME:]
+                            self.basename = bn
                 elif fspec['type'] == 'json':
                     # load as a json file
                     self.files[name] = self.load_json(fspec)
