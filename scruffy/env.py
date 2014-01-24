@@ -92,8 +92,6 @@ class Environment(object):
                     # load as a config file
                     self.files[name] = self.load_config(fspec)
 
-                    print(str(self.files[name]))
-
                     # if there was a basename variable specified in the config, grab the contents of it
                     if 'basename_variable' in self.files[name] and self.files[name]['basename_variable'] in os.environ:
                         bn = os.environ[self.files[name]['basename_variable']].replace("/", '')
