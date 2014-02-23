@@ -18,7 +18,7 @@ class Environment(object):
             'create': False,
             'relative': False,
             'cleanup': False,
-            'mode': 0700
+            'mode': 448 # 0700
         })
 
         # set up environment directory
@@ -26,7 +26,7 @@ class Environment(object):
         if self.spec['dir']['create']:
             try:
                 os.mkdir(self.dir, self.spec['dir']['mode'])
-            except OSError, e:
+            except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
@@ -54,7 +54,7 @@ class Environment(object):
                 'read': False,
                 'create': False,
                 'cleanup': False,
-                'mode': 0700
+                'mode': 448 # 0700
             }
             fspec = self.merge_dicts(fspec, d)
 
@@ -124,15 +124,15 @@ class Environment(object):
 
             # load it
             try:
-                config = self.parse_json(file(path).read())
-            except ValueError, e:
+                config = self.parse_json(open(path).read())
+            except ValueError as e:
                 raise IOError("Error parsing default configuration" + e.message)
 
         # load local config
         try:
-            local_config = self.parse_json(file(spec['path']).read())
+            local_config = self.parse_json(open(spec['path']).read())
             config = self.merge_dicts(local_config, config)
-        except ValueError, e:
+        except ValueError as e:
             raise ValueError("Error parsing local configuration: " + e.message)
         except IOError:
             pass
@@ -211,7 +211,7 @@ class Environment(object):
         """Merge two dictionaries"""
 
         # recursive merge where items in d2 override those in d1
-        for k1,v1 in d1.iteritems():
+        for k1,v1 in d1.items():
             if isinstance(v1, dict) and k1 in d2.keys() and isinstance(d2[k1], dict):
                 self.merge_dicts(v1, d2[k1])
             else:
