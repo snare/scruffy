@@ -2,18 +2,29 @@ from nose.tools import *
 from scruffy import *
 
 import tempfile
+import subprocess
+import shutil
 
 ENV1 = []
 ENV2 = []
 t = None
+td = None
 
 def setup():
-    global ENV1, ENV2, t
+    global ENV1, ENV2, t, td
 
+    # copy a config to somewhere for an absolute path test
     t = tempfile.NamedTemporaryFile(delete=False)
     d = file(os.path.join(os.getcwd(), 'tests/env1/default.cfg')).read()
     t.write(d)
     t.close()
+
+    # copy plugins somewhere for an absolute path test
+    td = tempfile.mkdtemp()
+    subprocess.call('cp -R ' + os.path.join(os.getcwd(), 'tests/copy_plugins/*') + ' ' + td, shell=True)
+
+    # set test environment variable
+    os.environ['TEST_VARIABLE'] = os.path.join(os.getcwd(), 'tests/env1/the_thing.txt')
 
     ENV1 = Environment({
         'dir':  {
@@ -66,6 +77,37 @@ def setup():
             'bn_file': {
                 'name':     '{basename}.txt',
                 'read':     False
+            },
+            'var_file': {
+                'name':     'no_such_file',
+                'read':     True,
+                'var':      'TEST_VARIABLE'
+            },
+            'file_rel_to_pkg': {
+                'path':     'env1/the_thing.txt',
+                'read':     True,
+                'rel_to':   'pkg',
+                'pkg':      'tests'
+            },
+            'file_rel_to_cwd': {
+                'path':     'tests/env1/the_thing.txt',
+                'read':     True,
+                'rel_to':   'cwd'
+            },
+            'file_rel_to_abs': {
+                'path':     t.name,
+                'read':     True,
+                'rel_to':   'abs'
+            },
+            'local_plugins': {
+                'type':     'plugin_dir',
+                'name':     'plugins'
+            },
+            'internal_plugins': {
+                'type':     'plugin_dir',
+                'path':     'env1/plugins1',
+                'rel_to':   'pkg',
+                'pkg':      'tests'
             }
         },
         'basename': 'test'
@@ -99,6 +141,10 @@ def teardown():
         os.rmdir('tests/env2')
     except:
         pass
+    try:
+        shutil.rmtree(td)
+    except:
+        pass
 
 # env 1
 def test_dir():
@@ -125,6 +171,18 @@ def test_file_basename():
 
 def test_no_read():
     assert ENV1['no_read'] == 'tests/env1/no_read_file'
+
+def test_var_file():
+    assert ENV1.read_file('var_file') == 'thing'
+
+def test_file_rel_to_pkg():
+    assert ENV1['file_rel_to_pkg'] == 'thing'
+
+def test_file_rel_to_cwd():
+    assert ENV1['file_rel_to_cwd'] == 'thing'
+
+def test_file_rel_to_abs():
+    assert '666' in ENV1['file_rel_to_abs']
 
 # config1
 def test_config1_dict():
@@ -207,3 +265,5 @@ def test_cleanup():
     assert not os.path.isfile('tests/env3/test')
 
 
+def test_plugins1():
+    pass

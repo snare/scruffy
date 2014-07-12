@@ -69,3 +69,4 @@ If you want to create another file within the environment directory (`~/.duckman
 
 	ENV.write_file('temp', 'some data')
 
+For more complicated examples see the included unit tests, [Voltron](https://github.com/snarez/voltron) and [Calculon](https://github.com/snarez/calculon).

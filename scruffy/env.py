@@ -54,34 +54,56 @@ class Environment(object):
 
             # apply defaults
             d = {
-                'type': 'raw',
-                'read': False,
-                'create': False,
-                'cleanup': False,
-                'mode': 448 # 0700
+                'type': 'raw',      # raw file
+                'read': False,      # don't read
+                'create': False,    # don't create
+                'cleanup': False,   # don't clean up
+                'mode': 448,        # 0700
+                'rel_to': 'dir'     # relative to environment directory     
             }
             fspec = self.merge_dicts(fspec, d)
 
-            # add filename if one isn't provided
+            # if we didn't get a name, use the name of the dictionary
             if 'name' not in fspec:
                 fspec['name'] = name
-
-            # if environment var exists, override path
-            if 'var' in fspec and fspec['var'] in os.environ:
-                fspec['path'] = os.environ[fspec['var']]
-            else:
-                fspec['path'] = os.path.join(self.dir, fspec['name'])
 
             # substitute basename
             if self.basename:
                 fspec['name'] = fspec['name'].format(basename=self.basename)
+
+            # if this file doesn't have a path specified, use the name
+            if 'path' not in fspec:
+                # otherwise we use the 'path' field provided
+                fspec['path'] = fspec['name']
+
+            # if environment var exists in this fspec then use it to override the path
+            if 'var' in fspec and fspec['var'] in os.environ:
+                fspec['path'] = os.environ[fspec['var']]
+            else:
+                # otherwise update the path based on the 'rel_to' field
+                if fspec['rel_to'] == 'pkg' and 'pkg' in fspec:
+                    # relative to a given package, and package is specified
+                    fspec['path'] = pkg_resources.resource_filename(fspec['pkg'], fspec['path'])
+                elif fspec['rel_to'] == 'pwd' or fspec['rel_to'] == 'cwd':
+                    # relative to the current working directory
+                    fspec['path'] = os.path.join(os.getcwd(), fspec['path'])
+                elif fspec['rel_to'] == 'abs':
+                    # absolute path has been provided, don't update it
+                    pass
+                else:
+                    # relative to the environment directory (the default)
+                    fspec['path'] = os.path.join(self.dir, fspec['path'])
 
             # store updated spec
             self.spec['files'][name] = fspec
 
             # create file
             if 'create' in fspec and fspec['create']:
-                if not os.path.isfile(fspec['path']):
+                if fspec['type'] == 'plugin_dir' and not os.path.exists(fspec['path']):
+                    # plugin_dir should probably never have the create flag, but let's handle it anyway
+                    os.mkdir(fspec['path'])
+                elif not os.path.exists(fspec['path']):
+                    # otherwise if it's a normal file of some kind and doesn't exist, create it
                     fd = os.open(fspec['path'], os.O_WRONLY | os.O_CREAT, fspec['mode'])
                     f = os.fdopen(fd, 'w')
                     f.close()
@@ -105,11 +127,18 @@ class Environment(object):
                 elif fspec['type'] == 'raw':
                     # load as raw file
                     self.files[name] = self.load_raw(fspec)
+                elif fspec['type'] == 'plugin_dir':
+                    # this is a plugin directory, ignore it here as we'll load it below
+                    pass
                 else:
                     # no idea, just load it as raw
                     self.files[name] = self.load_raw(fspec)
             else:
-                self.files[name] = self.path_to(fspec['name'])
+                self.files[name] = fspec['path']
+
+            # load plugins
+            if fspec['type'] == 'plugin_dir':
+                self.load_plugins(fspec)
 
     def load_config(self, spec):
         """Load a JSON configuration file"""
@@ -151,6 +180,9 @@ class Environment(object):
         """Load a raw text file"""
 
         return file(spec['path']).read()
+
+    def load_plugins(self, spec):
+        pass
 
     def parse_json(self, config):
         """Parse a JSON file"""
