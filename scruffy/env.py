@@ -4,6 +4,8 @@ import pkg_resources
 import itertools
 import errno
 
+from plugin import PluginManager
+
 MAX_BASENAME = 16
 
 class Environment(object):
@@ -12,6 +14,7 @@ class Environment(object):
         self.spec = spec
         self.basename = spec['basename']
         self.files = {}
+        self.plugin_mgr = PluginManager()
 
         # apply defaults
         self.spec['dir'] = self.merge_dicts(self.spec['dir'],  {
@@ -46,8 +49,8 @@ class Environment(object):
         """Initialise files"""
 
         # initialise files, loading any config files first to ensure that any basename etc changes have applied
-        configs = filter(lambda i: 'type' in self.spec['files'][i] and self.spec['files'][i]['type'] == 'config', self.spec['files'])
-        others = filter(lambda i: i not in configs, self.spec['files'])
+        configs = list(filter(lambda i: 'type' in self.spec['files'][i] and self.spec['files'][i]['type'] == 'config', self.spec['files']))
+        others = list(filter(lambda i: i not in configs, self.spec['files']))
 
         for name in (configs + others):
             fspec = self.spec['files'][name]
@@ -59,7 +62,7 @@ class Environment(object):
                 'create': False,    # don't create
                 'cleanup': False,   # don't clean up
                 'mode': 448,        # 0700
-                'rel_to': 'dir'     # relative to environment directory     
+                'rel_to': 'dir'     # relative to environment directory
             }
             fspec = self.merge_dicts(fspec, d)
 
@@ -99,9 +102,10 @@ class Environment(object):
 
             # create file
             if 'create' in fspec and fspec['create']:
-                if fspec['type'] == 'plugin_dir' and not os.path.exists(fspec['path']):
-                    # plugin_dir should probably never have the create flag, but let's handle it anyway
-                    os.mkdir(fspec['path'])
+                if fspec['type'] == 'plugin_dir':
+                    # create the plugin directory if it doesn't exist
+                    if not os.path.exists(fspec['path']):
+                        os.mkdir(fspec['path'])
                 elif not os.path.exists(fspec['path']):
                     # otherwise if it's a normal file of some kind and doesn't exist, create it
                     fd = os.open(fspec['path'], os.O_WRONLY | os.O_CREAT, fspec['mode'])
@@ -182,7 +186,9 @@ class Environment(object):
         return file(spec['path']).read()
 
     def load_plugins(self, spec):
-        pass
+        """Load plugins"""
+
+        self.plugin_mgr.load_plugins(spec['path'])
 
     def parse_json(self, config):
         """Parse a JSON file"""
@@ -252,3 +258,7 @@ class Environment(object):
             else:
                 d2[k1] = v1
         return d2
+
+    @property
+    def plugins(self):
+        return self.plugin_mgr.plugins

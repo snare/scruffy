@@ -1,5 +1,6 @@
 from nose.tools import *
 from scruffy import *
+from scruffy.plugin import PluginManager
 
 import tempfile
 import subprocess
@@ -21,7 +22,7 @@ def setup():
 
     # copy plugins somewhere for an absolute path test
     td = tempfile.mkdtemp()
-    subprocess.call('cp -R ' + os.path.join(os.getcwd(), 'tests/copy_plugins/*') + ' ' + td, shell=True)
+    subprocess.call('cp -R ' + os.path.join(os.getcwd(), 'tests/env1/plugins/*') + ' ' + td, shell=True)
 
     # set test environment variable
     os.environ['TEST_VARIABLE'] = os.path.join(os.getcwd(), 'tests/env1/the_thing.txt')
@@ -105,7 +106,7 @@ def setup():
             },
             'internal_plugins': {
                 'type':     'plugin_dir',
-                'path':     'env1/plugins1',
+                'path':     'env1/plugins',
                 'rel_to':   'pkg',
                 'pkg':      'tests'
             }
@@ -124,6 +125,11 @@ def setup():
                 'type':     'raw',
                 'read':     True,
                 'create':   True
+            },
+            'local_plugins': {
+                'type':     'plugin_dir',
+                'name':     'plugins',
+                'create':   True
             }
         },
         'basename': 'test'
@@ -136,9 +142,7 @@ def teardown():
     except:
         pass
     try:
-        os.remove('tests/env1/arb_file')
-        os.remove('tests/env2/thing')
-        os.rmdir('tests/env2')
+        shutil.rmtree('tests/env2')
     except:
         pass
     try:
@@ -232,7 +236,6 @@ def test_config3_local_value_nest():
 def test_config3_default_value_nest():
     assert ENV1['config3']['setting3']['key2'] == 'value'
 
-
 # env 2
 def test_create_dir():
     assert os.path.isdir(ENV2.dir)
@@ -240,6 +243,21 @@ def test_create_dir():
 def test_create_raw_file():
     assert os.path.isfile('tests/env2/thing')
 
+def test_create_plugins_dir():
+    assert os.path.isdir('tests/env2/plugins')
+
+def test_plugin_load():
+    assert ENV2.plugins[0].__name__ == "ThingPlugin"
+
+def test_plugin_call():
+    assert ENV2.plugins[0]().do_a_thing() == 666
+
+def test_plugin_load_nest():
+    cls = ENV2.plugins[1]
+    assert cls.__name__ == "ThangPlugin"
+
+def test_plugin_call_nest():
+    assert ENV2.plugins[1]().do_a_thing() == 777
 
 ENV3_SPEC = {
     'dir':  {
