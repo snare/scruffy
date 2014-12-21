@@ -1,5 +1,5 @@
 import os
-import json
+import yaml
 import pkg_resources
 import itertools
 import errno
@@ -17,7 +17,7 @@ class Environment(object):
         self.plugin_mgr = PluginManager()
 
         # apply defaults
-        self.spec['dir'] = self.merge_dicts(self.spec['dir'],  {
+        self.spec['dir'] = merge_dicts(self.spec['dir'],  {
             'create': False,
             'relative': False,
             'cleanup': False,
@@ -64,7 +64,7 @@ class Environment(object):
                 'mode': 448,        # 0700
                 'rel_to': 'dir'     # relative to environment directory
             }
-            fspec = self.merge_dicts(fspec, d)
+            fspec = merge_dicts(fspec, d)
 
             # if we didn't get a name, use the name of the dictionary
             if 'name' not in fspec:
@@ -125,9 +125,9 @@ class Environment(object):
                             if len(bn) > MAX_BASENAME:
                                 bn = bn[-MAX_BASENAME:]
                             self.basename = bn
-                elif fspec['type'] == 'json':
-                    # load as a json file
-                    self.files[name] = self.load_json(fspec)
+                elif fspec['type'] in ['json', 'yaml']:
+                    # load as a yaml file
+                    self.files[name] = self.load_yaml(fspec)
                 elif fspec['type'] == 'raw':
                     # load as raw file
                     self.files[name] = self.load_raw(fspec)
@@ -145,7 +145,7 @@ class Environment(object):
                 self.load_plugins(fspec)
 
     def load_config(self, spec):
-        """Load a JSON configuration file"""
+        """Load a JSON/YAML configuration file"""
 
         # load default config
         config = {}
@@ -160,25 +160,30 @@ class Environment(object):
 
             # load it
             try:
-                config = self.parse_json(open(path).read())
+                config = self.parse_yaml(open(path).read())
             except ValueError as e:
                 raise IOError("Error parsing default configuration" + e.message)
 
         # load local config
         try:
-            local_config = self.parse_json(open(spec['path']).read())
-            config = self.merge_dicts(local_config, config)
+            local_config = self.parse_yaml(open(spec['path']).read())
+            config = merge_dicts(local_config, config)
         except ValueError as e:
             raise ValueError("Error parsing local configuration: " + e.message)
         except IOError:
             pass
 
-        return config
+        return Config(config=config)
 
     def load_json(self, spec):
         """Load a JSON file"""
 
-        return self.parse_json(file(spec['path']).read())
+        return self.parse_yaml(file(spec['path']).read())
+
+    def load_yaml(self, spec):
+        """Load a YAML file"""
+
+        return self.parse_yaml(file(spec['path']).read())
 
     def load_raw(self, spec):
         """Load a raw text file"""
@@ -190,11 +195,15 @@ class Environment(object):
 
         self.plugin_mgr.load_plugins(spec['path'])
 
-    def parse_json(self, config):
+    def parse_json(self, data):
         """Parse a JSON file"""
 
-        lines = filter(lambda x: len(x) != 0 and x.strip()[0] != '#', config.split('\n'))
-        return json.loads('\n'.join(lines))
+        return self.parse_yaml(data)
+
+    def parse_yaml(self, data):
+        """Parse a YAML file"""
+
+        return yaml.load(data.replace('\t', '    '))
 
     def read_file(self, name):
         """Read a file within the environment"""
@@ -248,17 +257,98 @@ class Environment(object):
         if self.spec['dir']['cleanup']:
             os.rmdir(self.dir)
 
-    def merge_dicts(self, d1, d2):
-        """Merge two dictionaries"""
-
-        # recursive merge where items in d2 override those in d1
-        for k1,v1 in d1.items():
-            if isinstance(v1, dict) and k1 in d2.keys() and isinstance(d2[k1], dict):
-                self.merge_dicts(v1, d2[k1])
-            else:
-                d2[k1] = v1
-        return d2
 
     @property
     def plugins(self):
         return self.plugin_mgr.plugins
+
+
+class Config(object):
+    """
+    Represents a Scruffy config.
+
+    Can be accessed as a dictionary, like this:
+
+        config['top-level-section']['second-level-property']
+
+    Or as a dictionary with a key path, like this:
+
+        config['top_level_section.second_level_property']
+
+    Or as an object, like this:
+
+        config.top_level_section.second_level_property
+    """
+    def __init__(self, data=None, config={}):
+        self._config = config
+        if data:
+            self.parse_data(data)
+
+    def __getitem__(self, key):
+        if type(key) == str:
+            key_path = key.split('.')
+            v = self._config
+            while len(key_path):
+                key = key_path.pop(0)
+                try:
+                    v = v[key]
+                except:
+                    v[key] = {}
+                    v = v[key]
+        else:
+            v = self._config[key]
+
+        if type(v) in [dict, list, set]:
+            return Config(config=v)
+        else:
+            return v
+
+    def __setitem__(self, key, value):
+        key_path = key.split('.')
+        v = self._config
+        while len(key_path) > 1:
+            key = key_path.pop(0)
+            if not key in v:
+                v[key] = {}
+            v = v[key]
+        v[key_path.pop(0)] = value
+
+    def __getattr__(self, key):
+        return self[key]
+
+    def __setattr__(self, key, value):
+        if key.startswith("_"):
+            super(Config, self).__setattr__(key, value)
+        else:
+            self[key] = value
+
+    def __str__(self):
+        return str(self._config)
+
+    def __repr__(self):
+        return str(self._config)
+
+    def __eq__(self, other):
+        return self._config == other
+
+    def __contains__(self, key):
+        return key in self._config
+
+    def parse_data(self, data):
+        """
+        Parse some YAML/JSON config data and store the result.
+        """
+        d = yaml.load(data.replace('\t', '    '))
+        self._config = merge_dicts(self._config, d)
+
+
+def merge_dicts(d1, d2):
+    """Merge two dictionaries"""
+
+    # recursive merge where items in d2 override those in d1
+    for k1,v1 in d1.items():
+        if isinstance(v1, dict) and k1 in d2.keys() and isinstance(d2[k1], dict):
+            merge_dicts(v1, d2[k1])
+        else:
+            d2[k1] = v1
+    return d2

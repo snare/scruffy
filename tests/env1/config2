@@ -1,6 +1,6 @@
 {
-	"setting1": 667,
-	"setting3": {
-		"key1": "not value"
-	}
+    "setting1": 667,
+    "setting3": {
+        "key1": "not value"
+    }
 }
