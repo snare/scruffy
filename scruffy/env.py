@@ -4,9 +4,11 @@ import pkg_resources
 import itertools
 import errno
 
-from plugin import PluginManager
+from .plugin import PluginManager
+from .config import ConfigNode
 
 MAX_BASENAME = 16
+
 
 class Environment(object):
     """An environment in which to run a program"""
@@ -173,7 +175,7 @@ class Environment(object):
         except IOError:
             pass
 
-        return Config(config=config)
+        return ConfigNode(data=config)
 
     def load_json(self, spec):
         """Load a JSON file"""
@@ -261,85 +263,6 @@ class Environment(object):
     @property
     def plugins(self):
         return self.plugin_mgr.plugins
-
-
-class Config(object):
-    """
-    Represents a Scruffy config.
-
-    Can be accessed as a dictionary, like this:
-
-        config['top-level-section']['second-level-property']
-
-    Or as a dictionary with a key path, like this:
-
-        config['top_level_section.second_level_property']
-
-    Or as an object, like this:
-
-        config.top_level_section.second_level_property
-    """
-    def __init__(self, data=None, config={}):
-        self._config = config
-        if data:
-            self.parse_data(data)
-
-    def __getitem__(self, key):
-        if type(key) == str:
-            key_path = key.split('.')
-            v = self._config
-            while len(key_path):
-                key = key_path.pop(0)
-                try:
-                    v = v[key]
-                except:
-                    v[key] = {}
-                    v = v[key]
-        else:
-            v = self._config[key]
-
-        if type(v) in [dict, list, set]:
-            return Config(config=v)
-        else:
-            return v
-
-    def __setitem__(self, key, value):
-        key_path = key.split('.')
-        v = self._config
-        while len(key_path) > 1:
-            key = key_path.pop(0)
-            if not key in v:
-                v[key] = {}
-            v = v[key]
-        v[key_path.pop(0)] = value
-
-    def __getattr__(self, key):
-        return self[key]
-
-    def __setattr__(self, key, value):
-        if key.startswith("_"):
-            super(Config, self).__setattr__(key, value)
-        else:
-            self[key] = value
-
-    def __str__(self):
-        return str(self._config)
-
-    def __repr__(self):
-        return str(self._config)
-
-    def __eq__(self, other):
-        return self._config == other
-
-    def __contains__(self, key):
-        return key in self._config
-
-    def parse_data(self, data):
-        """
-        Parse some YAML/JSON config data and store the result.
-        """
-        d = yaml.load(data.replace('\t', '    '))
-        self._config = merge_dicts(self._config, d)
 
 
 def merge_dicts(d1, d2):

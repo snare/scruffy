@@ -5,6 +5,8 @@ from scruffy.plugin import PluginManager
 import tempfile
 import subprocess
 import shutil
+import yaml
+import os
 
 ENV1 = []
 ENV2 = []
@@ -214,7 +216,7 @@ def test_file_rel_to_abs():
 
 # config1
 def test_config1_dict():
-    assert type(ENV1['config1']) == Config
+    assert type(ENV1['config1']) == ConfigNode
 
 def test_config1_local_value():
     assert ENV1['config1']['setting1'] == 667
@@ -230,7 +232,7 @@ def test_config1_default_value_nest():
 
 # config2
 def test_config2_dict():
-    assert type(ENV1['config2']) == Config
+    assert type(ENV1['config2']) == ConfigNode
 
 def test_config2_local_value():
     assert ENV1['config2']['setting1'] == 667
@@ -246,7 +248,7 @@ def test_config2_default_value_nest():
 
 # config3
 def test_config3_dict():
-    assert type(ENV1['config3']) == Config
+    assert type(ENV1['config3']) == ConfigNode
 
 def test_config3_local_value():
     assert ENV1['config3']['setting1'] == 667
@@ -262,7 +264,7 @@ def test_config3_default_value_nest():
 
 # config4
 def test_config4_dict():
-    assert type(ENV1['config4']) == Config
+    assert type(ENV1['config4']) == ConfigNode
 
 def test_config4_local_value():
     assert ENV1['config4']['setting1'] == 666
@@ -313,13 +315,14 @@ ENV3_SPEC = {
 # env 3
 def test_cleanup():
     with Environment(ENV3_SPEC) as env:
-        pass
+        assert os.path.isfile('tests/env3/test')
     assert not os.path.isfile('tests/env3/test')
 
 # config object
 def test_config_object():
-    c = Config(YAML)
-    assert type(c) == Config
+    d = yaml.load(YAML)
+    c = ConfigNode(data=d)
+    assert type(c) == ConfigNode
     assert c.thang.d.b == 2
     assert c['thang']['d']['b'] == 2
     assert c['thang.d.b'] == 2
@@ -327,7 +330,7 @@ def test_config_object():
     assert c.derp[0].a == 1
 
 def test_config_object_set():
-    c = Config()
+    c = ConfigNode()
     c.derp1 = {'a': [1,2,3], 'b': 'xxx'}
     assert c.derp1.a[0] == 1
     assert c.derp1.b == 'xxx'
@@ -338,8 +341,9 @@ def test_config_object_set():
     try:
         c.derp3.a.b.c.d = 666
         raise Exception()
-    except AttributeError:
-        pass
+    except Exception as e:
+        if type(e) not in [KeyError, IndexError]:
+            raise
     c.derp3.b = 'x'
     c['derp4']['a']['b'] = 777
     assert c.derp4.a.b == 777
