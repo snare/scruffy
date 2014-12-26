@@ -6,7 +6,74 @@ Scruffy is a simple framework for managing the environment in which a Python-bas
 
 Scruffy is used by [Voltron](https://github.com/snarez/voltron) and [Calculon](https://github.com/snarez/calculon). Richo suggested pulling it out into its own package, and it seemed like a good idea to write more documentation and tests than actual code.
 
-## Usage Example
+## Configuration
+
+Scruffy provides a `ConfigNode` class to represent a hierarchical configuration. This configuration might represented on disk as a JSON or YAML document.
+
+This class can be used standalone without Scruffy's `Environment` class.
+
+`ConfigNode` can be initalised with a `dict`, like this:
+
+	#!python
+	>>> c = ConfigNode({'option1': 'value', 'option2': 'value'})
+
+This object acts a lot like a Python `dict` from here on out:
+
+	#!python
+	>>> c
+	{'option2': 'value', 'option1': 'value'}
+	>>> c['option1']
+	value
+	>>> type(c)
+	<class 'scruffy.config.ConfigNode'>
+
+But it can also be accessed like an object, using attributes to access data:
+
+	>>> c = ConfigNode()
+	>>> c.something = 123
+	>>> c.someguy.email = 'someguy@hurr'
+	>>> c.someguy.name = 'Some Guy'
+	>>> c
+	{'something': 123, 'someguy': {'email': 'someguy@hurr', 'name': 'Some Guy'}}
+	>>> c.someguy
+	{'email': 'someguy@hurr', 'name': 'Some Guy'}
+	>>> c.someguy.name
+	Some Guy
+
+It's worth noting that items return by either method are instances of `ConfigNode` and the data is not looked up from the root dictionary until it is either cast to a basic Python type like `int`, or compared against some other value using a comparison operator:
+
+	>>> type(c.something)
+	<class 'scruffy.config.ConfigNode'>
+	>>> c.something == 123
+	True
+	>>> c.something > 100
+	True
+
+Direct comparisons against the expected type will not work, so you may want to make explicit casts just to be sure:
+
+	>>> int(c.something)
+	123	
+	>>> type(c.something) == int
+	False
+	>>> type(int(c.something)) == int
+	True
+
+The reason for this is the way that value setting is implemented, so we can access nested properties that don't currently exist, like this:
+
+	>>> c = ConfigNode()
+	>>> c
+	{}
+	>>> c.a.b.c.d
+	None
+	>>> c.a.b.c.d = 1
+	>>> c.a.b.c.d
+	1
+	>>> c
+	{'a': {'b': {'c': {'d': 1}}}}
+
+## Environment
+
+Scruffy's `Environment` class manage's the program's environment. It is responsible for initialising directories, loading configuration files, etc.
 
 Say you're writing a simple command-line tool for keeping track of the ducks in your collection. Let's call it `duckman`. `duckman` is installed with `setuptools`, which installs a package to your Python `site-packages` and creates a console entry point script. The package directory looks something like this:
 	
@@ -36,7 +103,7 @@ In order to load the configuration file, apply it on top of the defaults, create
 
 	from scruffy import Environment
 
-	ENV = Environment({
+	env = Environment({
 	    'dir':  {
 	        'path': '~/.duckman',					# path to our environment directory
 	        'create': True							# create it if it doesn't exist, we need to store the lockfile
@@ -61,12 +128,17 @@ In order to load the configuration file, apply it on top of the defaults, create
 	    'basename': 'duckman'						# voodoo? (not relevant for this example)
 	})
 
-The configuration from `~/.duckman/config` is loaded and defaults applied, and the `ENV` variable can then be used to access the config data like this:
+The configuration from `~/.duckman/config` is loaded and defaults applied, and the `env` variable can then be used to access the config data like this:
 
-	ENV['config']['duck_pref']
+	env['config']['duck_pref']
+
+	or
+
+	config = env['config']
+	config.duck_pref
 
 If you want to create another file within the environment directory (`~/.duckman`):
 
-	ENV.write_file('temp', 'some data')
+	env.write_file('temp', 'some data')
 
 For more complicated examples see the included unit tests, [Voltron](https://github.com/snarez/voltron) and [Calculon](https://github.com/snarez/calculon).
