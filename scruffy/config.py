@@ -16,7 +16,7 @@ class ConfigNode(object):
 
         config.top_level_section.second_level_property
     """
-    def __init__(self, root=None, path=None, data={}):
+    def __init__(self, data={}, root=None, path=None):
         self._root = root
         if not self._root:
             self._root = self
