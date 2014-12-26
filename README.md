@@ -40,7 +40,7 @@ But it can also be accessed like an object, using attributes to access data:
 	>>> c.someguy.name
 	Some Guy
 
-It's worth noting that items return by either method are instances of `ConfigNode` and the data is not looked up from the root dictionary until it is either cast to a basic Python type like `int`, or compared against some other value using a comparison operator:
+It's worth noting that items returned by either method are instances of `ConfigNode` and the data is not looked up from the root dictionary until it is either cast to a basic Python type like `int`, or compared against some other value using a comparison operator:
 
 	>>> type(c.something)
 	<class 'scruffy.config.ConfigNode'>
@@ -51,6 +51,8 @@ It's worth noting that items return by either method are instances of `ConfigNod
 
 Direct comparisons against the expected type will not work, so you may want to make explicit casts just to be sure:
 
+	>>> c.something
+	123
 	>>> int(c.something)
 	123	
 	>>> type(c.something) == int
@@ -73,7 +75,7 @@ The reason for this is the way that value setting is implemented, so we can acce
 
 ## Environment
 
-Scruffy's `Environment` class manage's the program's environment. It is responsible for initialising directories, loading configuration files, etc.
+Scruffy's `Environment` class manages the program's environment. It is responsible for initialising directories, loading configuration files, etc.
 
 Say you're writing a simple command-line tool for keeping track of the ducks in your collection. Let's call it `duckman`. `duckman` is installed with `setuptools`, which installs a package to your Python `site-packages` and creates a console entry point script. The package directory looks something like this:
 	
