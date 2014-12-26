@@ -14,12 +14,10 @@ This class can be used standalone without Scruffy's `Environment` class.
 
 `ConfigNode` can be initalised with a `dict`, like this:
 
-	#!python
 	>>> c = ConfigNode({'option1': 'value', 'option2': 'value'})
 
 This object acts a lot like a Python `dict` from here on out:
 
-	#!python
 	>>> c
 	{'option2': 'value', 'option1': 'value'}
 	>>> c['option1']
