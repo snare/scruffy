@@ -5,7 +5,7 @@ import itertools
 import errno
 
 from .plugin import PluginManager
-from .config import ConfigNode
+from .config import *
 
 MAX_BASENAME = 16
 
@@ -19,7 +19,7 @@ class Environment(object):
         self.plugin_mgr = PluginManager()
 
         # apply defaults
-        self.spec['dir'] = merge_dicts(self.spec['dir'],  {
+        self.spec['dir'] = Config(data=self.spec['dir'], defaults={
             'create': False,
             'relative': False,
             'cleanup': False,
@@ -27,10 +27,10 @@ class Environment(object):
         })
 
         # set up environment directory
-        self.dir = os.path.expanduser(self.spec['dir']['path'])
-        if self.spec['dir']['create']:
+        self.dir = os.path.expanduser(str(self.spec['dir'].path))
+        if self.spec['dir'].create:
             try:
-                os.mkdir(self.dir, self.spec['dir']['mode'])
+                os.mkdir(self.dir, int(self.spec['dir'].mode))
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
@@ -55,18 +55,14 @@ class Environment(object):
         others = list(filter(lambda i: i not in configs, self.spec['files']))
 
         for name in (configs + others):
-            fspec = self.spec['files'][name]
-
-            # apply defaults
-            d = {
+            fspec = Config(data=self.spec['files'][name], defaults={
                 'type': 'raw',      # raw file
                 'read': False,      # don't read
                 'create': False,    # don't create
                 'cleanup': False,   # don't clean up
                 'mode': 448,        # 0700
                 'rel_to': 'dir'     # relative to environment directory
-            }
-            fspec = merge_dicts(fspec, d)
+            })
 
             # if we didn't get a name, use the name of the dictionary
             if 'name' not in fspec:
@@ -74,7 +70,7 @@ class Environment(object):
 
             # substitute basename
             if self.basename:
-                fspec['name'] = fspec['name'].format(basename=self.basename)
+                fspec['name'] = str(fspec['name']).format(basename=self.basename)
 
             # if this file doesn't have a path specified, use the name
             if 'path' not in fspec:
@@ -150,7 +146,7 @@ class Environment(object):
         """Load a JSON/YAML configuration file"""
 
         # load default config
-        config = {}
+        default_config = {}
         if 'default' in spec:
             # find where the default configuration is
             if spec['default']['rel_to'] == 'pkg':
@@ -162,20 +158,20 @@ class Environment(object):
 
             # load it
             try:
-                config = self.parse_yaml(open(path).read())
+                default_config = self.parse_yaml(open(path).read())
             except ValueError as e:
                 raise IOError("Error parsing default configuration" + e.message)
 
         # load local config
+        local_config = {}
         try:
             local_config = self.parse_yaml(open(spec['path']).read())
-            config = merge_dicts(local_config, config)
         except ValueError as e:
             raise ValueError("Error parsing local configuration: " + e.message)
         except IOError:
             pass
 
-        return ConfigNode(data=config)
+        return Config(data=local_config, defaults=default_config)
 
     def load_json(self, spec):
         """Load a JSON file"""
@@ -263,15 +259,3 @@ class Environment(object):
     @property
     def plugins(self):
         return self.plugin_mgr.plugins
-
-
-def merge_dicts(d1, d2):
-    """Merge two dictionaries"""
-
-    # recursive merge where items in d2 override those in d1
-    for k1,v1 in d1.items():
-        if isinstance(v1, dict) and k1 in d2.keys() and isinstance(d2[k1], dict):
-            merge_dicts(v1, d2[k1])
-        else:
-            d2[k1] = v1
-    return d2

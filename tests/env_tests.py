@@ -13,24 +13,6 @@ ENV2 = []
 t = None
 td = None
 
-YAML = """
-thing: 123
-another:
-- 666
-- 777
-- 888
-thang:
-    a: 1
-    b: 2
-    c: 3
-    d: {a: 1, b: 2, c: 3}
-derp:
-- {a: 1}
-- {a: 2}
-- {a: 3}
-- {a: 4}
-"""
-
 
 def setup():
     global ENV1, ENV2, t, td
@@ -216,7 +198,7 @@ def test_file_rel_to_abs():
 
 # config1
 def test_config1_dict():
-    assert type(ENV1['config1']) == ConfigNode
+    assert type(ENV1['config1']) == Config
 
 def test_config1_local_value():
     assert ENV1['config1']['setting1'] == 667
@@ -232,7 +214,7 @@ def test_config1_default_value_nest():
 
 # config2
 def test_config2_dict():
-    assert type(ENV1['config2']) == ConfigNode
+    assert type(ENV1['config2']) == Config
 
 def test_config2_local_value():
     assert ENV1['config2']['setting1'] == 667
@@ -248,7 +230,7 @@ def test_config2_default_value_nest():
 
 # config3
 def test_config3_dict():
-    assert type(ENV1['config3']) == ConfigNode
+    assert type(ENV1['config3']) == Config
 
 def test_config3_local_value():
     assert ENV1['config3']['setting1'] == 667
@@ -264,7 +246,7 @@ def test_config3_default_value_nest():
 
 # config4
 def test_config4_dict():
-    assert type(ENV1['config4']) == ConfigNode
+    assert type(ENV1['config4']) == Config
 
 def test_config4_local_value():
     assert ENV1['config4']['setting1'] == 666
@@ -318,32 +300,3 @@ def test_cleanup():
         assert os.path.isfile('tests/env3/test')
     assert not os.path.isfile('tests/env3/test')
 
-# config object
-def test_config_object():
-    d = yaml.load(YAML)
-    c = ConfigNode(data=d)
-    assert type(c) == ConfigNode
-    assert c.thang.d.b == 2
-    assert c['thang']['d']['b'] == 2
-    assert c['thang.d.b'] == 2
-    assert c.derp[0] == {'a': 1}
-    assert c.derp[0].a == 1
-
-def test_config_object_set():
-    c = ConfigNode()
-    c.derp1 = {'a': [1,2,3], 'b': 'xxx'}
-    assert c.derp1.a[0] == 1
-    assert c.derp1.b == 'xxx'
-    c['derp2.a.b.c'] = 123
-    assert c.derp2.a.b.c == 123
-    c.derp3.a.b.c = 666
-    assert c.derp3.a.b.c == 666
-    try:
-        c.derp3.a.b.c.d = 666
-        raise Exception()
-    except Exception as e:
-        if type(e) not in [KeyError, IndexError]:
-            raise
-    c.derp3.b = 'x'
-    c['derp4']['a']['b'] = 777
-    assert c.derp4.a.b == 777

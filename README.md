@@ -8,13 +8,13 @@ Scruffy is used by [Voltron](https://github.com/snarez/voltron) and [Calculon](h
 
 ## Configuration
 
-Scruffy provides a `ConfigNode` class to represent a hierarchical configuration. This configuration might represented on disk as a JSON or YAML document.
+Scruffy provides a `Config` class to represent a hierarchical configuration. This configuration might represented on disk as a JSON or YAML document.
 
 This class can be used standalone without Scruffy's `Environment` class.
 
-`ConfigNode` can be initalised with a `dict`, like this:
+`Config` can be initalised with a `dict`, like this:
 
-	>>> c = ConfigNode({'option1': 'value', 'option2': 'value'})
+	>>> c = Config({'option1': 'value', 'option2': 'value'})
 
 This object acts a lot like a Python `dict` from here on out:
 
@@ -23,11 +23,11 @@ This object acts a lot like a Python `dict` from here on out:
 	>>> c['option1']
 	value
 	>>> type(c)
-	<class 'scruffy.config.ConfigNode'>
+	<class 'scruffy.config.Config'>
 
 But it can also be accessed like an object, using attributes to access data:
 
-	>>> c = ConfigNode()
+	>>> c = Config()
 	>>> c.something = 123
 	>>> c.someguy.email = 'someguy@hurr'
 	>>> c.someguy.name = 'Some Guy'
@@ -38,29 +38,9 @@ But it can also be accessed like an object, using attributes to access data:
 	>>> c.someguy.name
 	Some Guy
 
-It's worth noting that items returned by either method are instances of `ConfigNode` and the data is not looked up from the root dictionary until it is either cast to a basic Python type like `int`, or compared against some other value using a comparison operator:
+We can also access nested properties that don't currently exist, like this:
 
-	>>> type(c.something)
-	<class 'scruffy.config.ConfigNode'>
-	>>> c.something == 123
-	True
-	>>> c.something > 100
-	True
-
-Direct comparisons against the expected type will not work, so you may want to make explicit casts just to be sure:
-
-	>>> c.something
-	123
-	>>> int(c.something)
-	123	
-	>>> type(c.something) == int
-	False
-	>>> type(int(c.something)) == int
-	True
-
-The reason for this is the way that value setting is implemented, so we can access nested properties that don't currently exist, like this:
-
-	>>> c = ConfigNode()
+	>>> c = Config()
 	>>> c
 	{}
 	>>> c.a.b.c.d

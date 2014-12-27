@@ -1,3 +1,4 @@
+import copy
 
 
 class ConfigNode(object):
@@ -16,21 +17,25 @@ class ConfigNode(object):
 
         config.top_level_section.second_level_property
     """
-    def __init__(self, data={}, root=None, path=None):
+    def __init__(self, data={}, defaults={}, root=None, path=None):
         self._root = root
         if not self._root:
             self._root = self
         self._path = path
-        self._data = data
+        self._defaults = defaults
+        self._data = copy.deepcopy(self._defaults)
+        self.update(data)
 
     def __getitem__(self, key):
-        return self._child(key)
+        c = self._child(key)
+        v = c._get_value()
+        if type(v) in [dict, list, type(None)]:
+            return c
+        else:
+            return v
 
     def __setitem__(self, key, value):
-        # Resolve the path to the specified key
         container, last = self._child(key)._resolve_path(create=True)
-
-        # Set the value
         container[last] = value
 
     def __getattr__(self, key):
@@ -78,6 +83,15 @@ class ConfigNode(object):
     def __contains__(self, key):
         return key in self._get_value()
 
+    def items(self):
+        return self._get_value().items()
+
+    def keys(self):
+        return self._get_value().keys()
+
+    def __iter__(self):
+        return self._get_value().__iter__()
+
     def _child(self, path):
         """
         Return a ConfigNode object representing a child node with the specified
@@ -85,7 +99,7 @@ class ConfigNode(object):
         """
         if self._path:
             path = '{}.{}'.format(self._path, path)
-        return ConfigNode(root=self._root, path=path)
+        return self.__class__(root=self._root, path=path)
 
     def _resolve_path(self, create=False):
         """
@@ -112,7 +126,10 @@ class ConfigNode(object):
         the item referred to by the key path.
         """
         # Split up the key path
-        key_path = self._path.split('.')
+        if type(self._path) == str:
+            key_path = self._path.split('.')
+        else:
+            key_path = [self._path]
 
         # Start at the root node
         node = self._root._data
@@ -135,9 +152,6 @@ class ConfigNode(object):
                     node[key] = {}
                 elif type(node) == list and type(key) == int and len(node) < key:
                     node.append([None for i in range(key-len(node))])
-                # XXX: Maybe add automagic conversion of nodes to dicts on indexing if we do shit like this
-                #   thing.x = 1
-                #   thing.x.y = 2
 
             # Store the last node and traverse down the hierarchy
             nodes.append(node)
@@ -165,3 +179,87 @@ class ConfigNode(object):
                 return None
         else:
             return self._data
+
+    def update(self, data={}, options={}):
+        """
+        Update the configuration with new data.
+
+        This can be passed either or both `data` and `options`.
+
+        `options` is a dict of keypath/value pairs like this (similar to
+        CherryPy's config mechanism:
+        {
+            'server.port': 8080,
+            'server.host': 'localhost',
+            'admin.email': 'admin@lol'
+        }
+
+        `data` is a dict of actual config data, like this:
+        {
+            'server': {
+                'port': 8080,
+                'host': 'localhost'
+            },
+            'admin': {
+                'email': 'admin@lol'
+            }
+        }
+        """
+        # Handle an update with a set of options like CherryPy does
+        for key in options:
+            self[key] = options[key]
+
+        # Merge in any data in `data`
+        if isinstance(data, ConfigNode):
+            data = data._get_value()
+        update_dict(self._get_value(), data)
+
+
+    def reset(self):
+        """
+        Reset the config to defaults.
+        """
+        self._data = copy.deepcopy(self._defaults)
+
+
+
+class Config(ConfigNode):
+    """
+    Config root node class. Just for convenience.
+    """
+
+
+def update_dict(target, source):
+    """
+    Recursively merge values from a nested dictionary into another nested
+    dictionary.
+
+    For example:
+    target before = {
+        'thing': 123,
+        'thang': {
+            'a': 1,
+            'b': 2
+        }
+    }
+    source = {
+        'thang': {
+            'a': 666,
+            'c': 777
+        }
+    }
+    target after = {
+        'thing': 123,
+        'thang': {
+            'a': 666,
+            'b': 2,
+            'c': 777
+        }
+    }
+    """
+    for k,v in source.items():
+        if isinstance(v, dict) and k in target and isinstance(source[k], dict):
+            update_dict(target[k], v)
+        else:
+            target[k] = v
+
