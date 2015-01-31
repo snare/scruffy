@@ -2,7 +2,7 @@
 
 *Scruffy. The Janitor.*
 
-Scruffy is a simple framework for managing the environment in which a Python-based tool runs. It handles the loading of configuration files, creation of temporary pid/state/socket files, etc.
+Scruffy is a simple framework for managing the environment in which a Python-based tool runs. It handles the loading of configuration files, creation of temporary pid/state/socket files, and the loading and management of plugins.
 
 Scruffy is used by [Voltron](https://github.com/snarez/voltron) and [Calculon](https://github.com/snarez/calculon). Richo suggested pulling it out into its own package, and it seemed like a good idea to write more documentation and tests than actual code.
 
@@ -38,7 +38,12 @@ But it can also be accessed like an object, using attributes to access data:
 	>>> c.someguy.name
 	Some Guy
 
-We can also access nested properties that don't currently exist, like this:
+Properties that don't exist will return `None`:
+
+	>>> c.someproperty
+	None
+
+Nested properties that don't currently exist can also be accessed, like this:
 
 	>>> c = Config()
 	>>> c
@@ -50,6 +55,40 @@ We can also access nested properties that don't currently exist, like this:
 	1
 	>>> c
 	{'a': {'b': {'c': {'d': 1}}}}
+
+`Config` objects can be created with a default configuration, which it can be reset to with the `reset()` method:
+
+	>>> c = Config(defaults={'option2': 'value', 'option1': 'value'})
+	>>> c
+	{'option2': 'value', 'option1': 'value'}
+	>>> c.option1 = 'xxx'
+	>>> c
+	{'option2': 'value', 'option1': 'xxx'}
+	>>> c.reset()
+	>>> c
+	{'option2': 'value', 'option1': 'value'}	
+
+Multiple config properties can be updated with a call to the `update()` method. The `options` paramater can contain a flat dictionary of properties keyed by "key paths" into the config object, like this:
+
+	>>> options = {
+	...     'option1': 'xxx',
+	...     'section.subsection.item1': 123,
+	...     'section.subsection.item2': 666
+	... }
+	>>> c.update(options=options)
+	>>> c
+	{'section': {'subsection': {'item2': 666, 'item1': 123}}, 'option2': 'value', 'option1': 'xxx'}
+
+Or a nested dictionary can be passed instead, using the `data` parameter:
+
+	>>> c.reset()
+	>>> c
+	{'option2': 'value', 'option1': 'value'}
+	>>> c.update(data={'section': {'subsection': {'item2': 666, 'item1': 123}}})
+	>>> c
+	{'section': {'subsection': {'item2': 666, 'item1': 123}}, 'option2': 'value', 'option1': 'value'}
+
+This method can be used to apply multiple levels of configuration on top of other layers.
 
 ## Environment
 
