@@ -10,5 +10,5 @@ setup(
     keywords = "scruffy",
     url = "https://github.com/snarez/scruffy",
     packages=['scruffy'],
-    install_requires = ['yaml'],
+    install_requires = ['pyyaml'],
 )
