@@ -43,7 +43,7 @@ class State(object):
         """
         if os.path.exists(self.path):
             with open(self.path, 'r') as f:
-                self.d = yaml.load(f.read().replace('\t', ' '*4))
+                self.d = defaultdict(lambda: None, yaml.load(f.read().replace('\t', ' '*4)))
 
     def cleanup(self):
         """
