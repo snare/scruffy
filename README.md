@@ -88,7 +88,7 @@ Or a nested dictionary can be passed instead, using the `data` parameter:
 	>>> c
 	{'section': {'subsection': {'item2': 666, 'item1': 123}}, 'option2': 'value', 'option1': 'value'}
 
-This method can be used to apply multiple levels of configuration on top of other layers.
+This method can be used to apply multiple levels of configuration on top of other levels. For example a default set of config options, a local configuration, command-line overrides, and then runtime configuration changes.
 
 ## Environment
 
@@ -103,18 +103,14 @@ Say you're writing a simple command-line tool for keeping track of the ducks in 
 	duckman/upright.py
 	duckman/default.cfg
 
-`default.cfg` is a JSON file containing the default configuration:
+`default.cfg` is a YAML (or JSON) file containing the default configuration:
 
-	{
-		"duck_pref": 	"upright",
-		"duck_db": 		"duckman.db"
-	}
+	duck_pref:	upright
+	duck_db:	duckman.db
 
 The user decides they much prefer flat ducks (naturally). In order to override this configuration, the user creates a directory `~/.duckman` and a file `config` inside containing:
 
-	{
-		"duck_pref": 	"flat"
-	}
+	duck_pref:	flat
 
 `duckman` also requires a lock file so other instances know that this `duckman` is doing his thing.
 
@@ -160,4 +156,4 @@ If you want to create another file within the environment directory (`~/.duckman
 
 	env.write_file('temp', 'some data')
 
-For more complicated examples see the included unit tests, [Voltron](https://github.com/snarez/voltron) and [Calculon](https://github.com/snarez/calculon).
+For more complicated examples see the included unit tests, [Voltron](https://github.com/snare/voltron) and [Calculon](https://github.com/snare/calculon).
