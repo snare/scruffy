@@ -201,7 +201,7 @@ class Environment(object):
     def parse_yaml(self, data):
         """Parse a YAML file"""
 
-        return yaml.load(data.replace('\t', '    '))
+        return yaml.safe_load(data.replace('\t', '    '))
 
     def read_file(self, name):
         """Read a file within the environment"""
