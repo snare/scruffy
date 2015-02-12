@@ -1,7 +1,7 @@
 import os
 
 from nose.tools import *
-from scruffy.state import State
+from scruffy.state import *
 
 STATE_FILE = 'test.state'
 
@@ -26,5 +26,25 @@ def test_with():
     with State(STATE_FILE) as s:
         s['yyy'] = 123
     s2 = State(STATE_FILE)
-    assert s['yyy'] == 123
+    assert s2['yyy'] == 123
+    s2.cleanup()
+
+def test_db_state():
+    # your user needs access to a db called 'test' for this to work
+    url='postgresql://localhost/scruffy_test'
+    s = DBState.state(url)
+    s['xxx'] = 1
+    s.save()
+    assert s.d == {'xxx': 1}
+    s2 = DBState.state(url)
+    assert s2['xxx'] == 1
     s.cleanup()
+    assert s['xxx'] == None
+
+def test_db_state_with():
+    url='postgresql://localhost/scruffy_test'
+    with DBState.state(url) as s:
+        s['yyy'] = 123
+    s2 = DBState.state(url)
+    assert s2['yyy'] == 123
+    s2.cleanup()
