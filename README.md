@@ -1,159 +1,166 @@
-# scruffy
+Scruffy
+=======
 
 *Scruffy. The Janitor.*
 
-Scruffy is a simple framework for managing the environment in which a Python-based tool runs. It handles the loading of configuration files, creation of temporary pid/state/socket files, and the loading and management of plugins.
+Scruffy is a framework for managing the environment in which a Python-based tool runs. It handles the loading of configuration files, the loading and management of plugins, and the management of other filesystem resources such as temporary files and directories, log files, etc.
 
-Scruffy is used by [Voltron](https://github.com/snarez/voltron) and [Calculon](https://github.com/snarez/calculon). Richo suggested pulling it out into its own package, and it seemed like a good idea to write more documentation and tests than actual code.
+A typical use case for Scruffy is a command-line Python tool with some or all of the following requirements:
 
-## Configuration
+* Read a set of configuration defaults
+* Read a local configuration file and apply it on top of the defaults
+* Allow overriding some configuration options with command line flags or at runtime
+* Load a core set of Python-based plugins
+* Load a set of user-defined Python-based plugins
+* Generate log files whose name, location and other logging settings are based on configuration
+* Store application state between runs in a file or database
 
-Scruffy provides a `Config` class to represent a hierarchical configuration. This configuration might represented on disk as a JSON or YAML document.
+Scruffy is used by [Voltron](https://github.com/snare/voltron) and [Calculon](https://github.com/snare/calculon).
 
-This class can be used standalone without Scruffy's `Environment` class.
+**Note: Scruffy has been completely redesigned.** In the unlikely event that anyone apart from @snare was using it, you might wanna either update your app to use the new format, or stick to v0.2.2.
 
-`Config` can be initalised with a `dict`, like this:
+Installation
+------------
 
-	>>> c = Config({'option1': 'value', 'option2': 'value'})
+A standard python setup script is included.
 
-This object acts a lot like a Python `dict` from here on out:
+    $ python setup.py install
 
-	>>> c
-	{'option2': 'value', 'option1': 'value'}
-	>>> c['option1']
-	value
-	>>> type(c)
-	<class 'scruffy.config.Config'>
+This will install the Scruffy egg wherever that happens on your system.
 
-But it can also be accessed like an object, using attributes to access data:
+Alternately, Scruffy can be installed with `pip` from PyPi (where it's called `scruffington`, because I didn't check for a conflict before I named it).
 
-	>>> c = Config()
-	>>> c.something = 123
-	>>> c.someguy.email = 'someguy@hurr'
-	>>> c.someguy.name = 'Some Guy'
-	>>> c
-	{'something': 123, 'someguy': {'email': 'someguy@hurr', 'name': 'Some Guy'}}
-	>>> c.someguy
-	{'email': 'someguy@hurr', 'name': 'Some Guy'}
-	>>> c.someguy.name
-	Some Guy
+    $ pip install scruffington
 
-Properties that don't exist will return `None`:
+Quick start
+-----------
 
-	>>> c.someproperty
-	None
+### Config
 
-Nested properties that don't currently exist can also be accessed, like this:
+Load a user config file, and apply it on top of a set of defaults loaded from inside the Python package we're currently running from.
 
-	>>> c = Config()
-	>>> c
-	{}
-	>>> c.a.b.c.d
-	None
-	>>> c.a.b.c.d = 1
-	>>> c.a.b.c.d
-	1
-	>>> c
-	{'a': {'b': {'c': {'d': 1}}}}
+*thingy.yaml*:
+```yaml
+some_property:  1
+other_property: a thing 
+```
 
-`Config` objects can be created with a default configuration, which it can be reset to with the `reset()` method:
+*thingy.py*:
+```python
+from scruffy import ConfigFile
 
-	>>> c = Config(defaults={'option2': 'value', 'option1': 'value'})
-	>>> c
-	{'option2': 'value', 'option1': 'value'}
-	>>> c.option1 = 'xxx'
-	>>> c
-	{'option2': 'value', 'option1': 'xxx'}
-	>>> c.reset()
-	>>> c
-	{'option2': 'value', 'option1': 'value'}	
+c = ConfigFile('thingy.yaml', load=True,
+    defaults=File('defaults.yaml', parent=PackageDirectory())
+)
 
-Multiple config properties can be updated with a call to the `update()` method. The `options` paramater can contain a flat dictionary of properties keyed by "key paths" into the config object, like this:
+print("c.some_property == {c.some_property}".format(c=c))
+print("c.other_property == {c.other_property}".format(c=c))
+```
 
-	>>> options = {
-	...     'option1': 'xxx',
-	...     'section.subsection.item1': 123,
-	...     'section.subsection.item2': 666
-	... }
-	>>> c.update(options=options)
-	>>> c
-	{'section': {'subsection': {'item2': 666, 'item1': 123}}, 'option2': 'value', 'option1': 'xxx'}
+Run it:
+```
+$ python thingy.py
+c.some_property == 1
+c.other_property == a thing
+```
 
-Or a nested dictionary can be passed instead, using the `data` parameter:
+### Plugins
 
-	>>> c.reset()
-	>>> c
-	{'option2': 'value', 'option1': 'value'}
-	>>> c.update(data={'section': {'subsection': {'item2': 666, 'item1': 123}}})
-	>>> c
-	{'section': {'subsection': {'item2': 666, 'item1': 123}}, 'option2': 'value', 'option1': 'value'}
+Load some plugins.
 
-This method can be used to apply multiple levels of configuration on top of other levels. For example a default set of config options, a local configuration, command-line overrides, and then runtime configuration changes.
+*~/.thingy/plugins/example.py*:
+```python
+from scruffy import Plugin
 
-## Environment
+class ExamplePlugin(Plugin):
+    def do_a_thing(self):
+        print('{}.{} is doing a thing'.format(__name__, self.__class__.__name__))
+```
 
-Scruffy's `Environment` class manages the program's environment. It is responsible for initialising directories, loading configuration files, etc.
+*thingy.py*:
+```python
+from scruffy import PluginDirectory, PluginRegistry
 
-Say you're writing a simple command-line tool for keeping track of the ducks in your collection. Let's call it `duckman`. `duckman` is installed with `setuptools`, which installs a package to your Python `site-packages` and creates a console entry point script. The package directory looks something like this:
-	
-	duckman
-	duckman/__init__.py
-	duckman/classification.py
-	duckman/flat.py
-	duckman/upright.py
-	duckman/default.cfg
+pd = PluginDirectory('~/.thingy/plugins')
+pd.load()
 
-`default.cfg` is a YAML (or JSON) file containing the default configuration:
+for p in PluginRegistry.plugins:
+    print("Initialising plugin {}".format(p))
+    p().do_a_thing()
+```
 
-	duck_pref:	upright
-	duck_db:	duckman.db
+Run it:
+```
+$ python thingy.py
+Initialising plugin <class 'example.ExamplePlugin'>
+example.ExamplePlugin is doing a thing
+```
 
-The user decides they much prefer flat ducks (naturally). In order to override this configuration, the user creates a directory `~/.duckman` and a file `config` inside containing:
+### Logging
 
-	duck_pref:	flat
+Scruffy's `LogFile` class will do some configuration of Python's `logging` module.
 
-`duckman` also requires a lock file so other instances know that this `duckman` is doing his thing.
+*log.py*:
+```python
+import logging
+from scruffy import LogFile
 
-In order to load the configuration file, apply it on top of the defaults, create the lock file and clean it up at exit, the following code is used in `duckman`:
+log = logging.getLogger('main')
+log.setLevel(logging.INFO)
+LogFile('/tmp/thingy.log', logger='main').configure()
 
-	from scruffy import Environment
+log.info('Hello from log.py')
+```
 
-	env = Environment({
-	    'dir':  {
-	        'path': '~/.duckman',					# path to our environment directory
-	        'create': True							# create it if it doesn't exist, we need to store the lockfile
-	    },
-	    'files': {
-	        'config': {
-	            'type':     'config',				# special case of json (applies default stuff below)
-	            'read':     True,					# read config at initialisation
-	            'default':  {
-	                'path':     'default.cfg',		# path to default config file
-	                'rel_to':   'pkg',				# base directory to which the path is relative (can also be "pwd" and "abs")
-	                'pkg':      'duckman'			# the name of the package where the default config resides
-	            }
-	        },
-	        'lock': {
-	            'type':     'raw',
-	            'read':     False,					# don't bother reading the contents, it's just a lock file
-	            'create':   True,					# create it during initialisation
-	            'cleanup':	True					# remove it during cleanup
-	        }
-	    },
-	    'basename': 'duckman'						# voodoo? (not relevant for this example)
-	})
+*/tmp/thingy.log*:
+```
+Hello from log.py
+```
 
-The configuration from `~/.duckman/config` is loaded and defaults applied, and the `env` variable can then be used to access the config data like this:
+### Environment
 
-	env['config']['duck_pref']
+Scruffy's `Environment` class ties all the other stuff together. The other classes can be instantiated as named children of an `Environment`, which will load any `Config` objects, apply the configs to the other objects, and then prepare the other objects.
 
-	or
+*~/.thingy/config*:
+```yaml
+log_dir:    /tmp/logs
+log_file:   thingy.log
+```
 
-	config = env['config']
-	config.duck_pref
+*env.py*:
+```python
+from scruffy import *
 
-If you want to create another file within the environment directory (`~/.duckman`):
+e = Environment(
+    main_dir=Directory('~/.thingy', create=True,
+        config=ConfigFile('config', defaults=File('defaults.yaml', parent=PackageDirectory())),
+        lock=LockFile('lock')
+        user_plugins=PluginDirectory('plugins')
+    ),
+    log_dir=Directory('{config:log_dir}', create=True
+        LogFile('{config:log_file}', logger='main')
+    ),
+    pkg_plugins=PluginDirectory('plugins', parent=PackageDirectory())
+)
+```
 
-	env.write_file('temp', 'some data')
+Documentation
+-------------
 
-For more complicated examples see the included unit tests, [Voltron](https://github.com/snare/voltron) and [Calculon](https://github.com/snare/calculon).
+See the [wiki](https://github.com/snare/scruffy/wiki) on github.
+
+## Bugs
+
+See the [issue tracker](https://github.com/snare/voltron/issues) on github.
+
+License
+-------
+
+This software is released under the "Buy snare a beer" license. If you use this and don't hate it, buy me a beer at a conference some time.
+
+Credits
+-------
+
+Thanks to Azimuth Security for letting me spend time working on this and other stupid projects.
+
+Props to [richo](http://github.com/richo). Flat duck pride.

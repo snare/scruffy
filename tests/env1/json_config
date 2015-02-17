@@ -1,0 +1,8 @@
+{
+	"setting1": 667,
+	"setting3": {
+		"key1": "not value"
+	},
+    "somedir": "/tmp/scruffy_test_dir",
+    "somefile": "tests/env1/the_thing.txt"
+}

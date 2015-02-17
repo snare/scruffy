@@ -30,8 +30,7 @@ def test_with():
     s2.cleanup()
 
 def test_db_state():
-    # your user needs access to a db called 'test' for this to work
-    url='postgresql://localhost/scruffy_test'
+    url='sqlite:///'
     s = DBState.state(url)
     s['xxx'] = 1
     s.save()
@@ -42,7 +41,7 @@ def test_db_state():
     assert s['xxx'] == None
 
 def test_db_state_with():
-    url='postgresql://localhost/scruffy_test'
+    url='sqlite:///'
     with DBState.state(url) as s:
         s['yyy'] = 123
     s2 = DBState.state(url)

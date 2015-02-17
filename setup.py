@@ -8,7 +8,7 @@ setup(
     description = ("The janitor"),
     license = "Buy snare a beer",
     keywords = "scruffy",
-    url = "https://github.com/snarez/scruffy",
-    packages=['scruffy'],
+    url = "https://github.com/snare/scruffy",
+    packages=['scruffy', 'sqlite3'],
     install_requires = ['pyyaml'],
 )

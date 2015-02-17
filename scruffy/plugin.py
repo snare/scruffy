@@ -1,5 +1,6 @@
 import os
 import imp
+import six
 
 
 class PluginRegistry(type):
@@ -12,6 +13,7 @@ class PluginRegistry(type):
             PluginRegistry.plugins.append(cls)
 
 
+@six.add_metaclass(PluginRegistry)
 class Plugin(object):
     """
     Top-level plugin class, using the PluginRegistry metaclass.
@@ -20,10 +22,6 @@ class Plugin(object):
     subclass will be the class collected in the PluginRegistry, and should
     contain references to any other resources required within the module.
     """
-    __metaclass__ = PluginRegistry
-
-    def __init__(self):
-        super(Plugin, self).__init__()
 
 
 class PluginManager(object):
@@ -41,7 +39,7 @@ class PluginManager(object):
         There is no criteria for a valid plugin at this level - any python
         module found in the directory will be loaded. Only modules that
         implement a subclass of the Plugin class above will be collected.
-        
+
         The directory will be traversed recursively.
         """
         # walk directory
