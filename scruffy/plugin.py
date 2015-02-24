@@ -22,7 +22,6 @@ class Plugin(object):
     subclass will be the class collected in the PluginRegistry, and should
     contain references to any other resources required within the module.
     """
-    __metaclass__ = PluginRegistry
 
 
 class PluginManager(object):

@@ -1,4 +1,10 @@
 import copy
+import os
+import ast
+import yaml
+import re
+
+from .file import File
 
 
 class ConfigNode(object):
@@ -18,6 +24,7 @@ class ConfigNode(object):
         config.top_level_section.second_level_property
     """
     def __init__(self, data={}, defaults={}, root=None, path=None):
+        super(ConfigNode, self).__init__()
         self._root = root
         if not self._root:
             self._root = self
@@ -99,7 +106,7 @@ class ConfigNode(object):
         """
         if self._path:
             path = '{}.{}'.format(self._path, path)
-        return self.__class__(root=self._root, path=path)
+        return ConfigNode(root=self._root, path=path)
 
     def _resolve_path(self, create=False):
         """
@@ -214,19 +221,147 @@ class ConfigNode(object):
             data = data._get_value()
         update_dict(self._get_value(), data)
 
-
     def reset(self):
         """
         Reset the config to defaults.
         """
         self._data = copy.deepcopy(self._defaults)
 
+    def to_dict(self):
+        """
+        Generate a plain dictionary.
+        """
+        return self._get_value()
 
 
 class Config(ConfigNode):
     """
     Config root node class. Just for convenience.
     """
+
+
+class ConfigEnv(ConfigNode):
+    """
+    Config based on based on environment variables.
+    """
+    def __init__(self, *args, **kwargs):
+        super(ConfigEnv, self).__init__(*args, **kwargs)
+
+        # build options dictionary from environment variables starting with __SC_
+        options = {}
+        for key in filter(lambda x: x.startswith('__SC_'), os.environ):
+            try:
+                val = ast.literal_eval(os.environ[key])
+            except:
+                val = os.environ[key]
+            options[key.replace('__SC_', '').lower()] = val
+
+        # update config with the values we've found
+        self.update(options=options)
+
+
+class ConfigFile(Config, File):
+    """
+    Config based on a loaded YAML or JSON file.
+    """
+    def __init__(self, path=None, defaults=None, load=False, apply_env=False, *args, **kwargs):
+        self._loaded = False
+        self._defaults_file = defaults
+        self._apply_env = apply_env
+        Config.__init__(self)
+        File.__init__(self, path=path, *args, **kwargs)
+
+        if load:
+            self.load()
+
+    def load(self, reload=False):
+        """
+        Load the config and defaults from files.
+        """
+        if reload or not self._loaded:
+            # load defaults
+            if self._defaults_file and type(self._defaults_file) == str:
+                self._defaults_file = File(self._defaults_file, parent=self._parent)
+            defaults = {}
+            if self._defaults_file:
+                defaults = yaml.safe_load(self._defaults_file.read().replace('\t', '    '))
+
+            # load data
+            data = {}
+            if self.exists:
+                data = yaml.safe_load(self.read().replace('\t', '    '))
+
+            # initialise with the loaded data
+            self._defaults = defaults
+            self._data = copy.deepcopy(self._defaults)
+            self.update(data=data)
+
+            # if specified, apply environment variables
+            if self._apply_env:
+                self.update(ConfigEnv())
+
+            self._loaded = True
+
+        return self
+
+    def save(self):
+        """
+        Save the config back to the config file.
+        """
+        self.write(yaml.dump(self._data))
+
+    def prepare(self):
+        """
+        Load the file when the Directory/Environment prepares us.
+        """
+        self.load()
+
+
+class ConfigApplicator(object):
+    """
+    Applies configs to other objects.
+    """
+    def __init__(self, config):
+        self.config = config
+
+    def apply(self, obj):
+        """
+        Apply the config to an object.
+        """
+        if type(obj) == str:
+            return self.apply_to_str(obj)
+
+    def apply_to_str(self, obj):
+        """
+        Apply the config to a string.
+        """
+        toks = re.split('({config:|})', obj)
+        newtoks = []
+        try:
+            while len(toks):
+                tok = toks.pop(0)
+                if tok == '{config:':
+                    # pop the config variable, look it up
+                    var = toks.pop(0)
+                    val = self.config[var]
+
+                    # if we got an empty node, then it didn't exist
+                    if type(val) == ConfigNode and val == None:
+                        raise KeyError("No such config variable '{}'".format(var))
+
+                    # add the value to the list
+                    newtoks.append(str(val))
+
+                    # pop the '}'
+                    toks.pop(0)
+                else:
+                    # not the start of a config block, just append it to the list
+                    newtoks.append(tok)
+            return ''.join(newtoks)
+        except IndexError:
+            pass
+
+        return obj
 
 
 def update_dict(target, source):
