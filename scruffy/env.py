@@ -16,7 +16,7 @@ class Environment(object):
     """
     def __init__(self, setup_logging=True, *args, **kwargs):
         self._pm = PluginManager()
-        self._children = kwargs
+        self._children = {}
         self.config = None
 
         # find a config if we have one and load it
@@ -37,18 +37,8 @@ class Environment(object):
                 if len(filter(lambda h: isinstance(h, logging.StreamHandler), log.handlers)) == 0:
                     log.addHandler(logging.StreamHandler())
 
-        # initialise children
-        for key in self._children:
-            # if it's a string, assume it's a directory
-            if type(self._children[key]) == str:
-                self._children[key] = Directory(self._children[key])
-
-            # set this environment as the child's env
-            self._children[key]._env = self
-
-            # apply config and prepare
-            self._children[key].apply_config(ConfigApplicator(self.config))
-            self._children[key].prepare()
+        # add children
+        self.add(**kwargs)
 
     def __enter__(self):
         return self
@@ -96,7 +86,11 @@ class Environment(object):
         Add objects to the environment.
         """
         for key in kwargs:
-            self._children[key] = kwargs[key]
+            if type(kwargs[key]) == str:
+                self._children[key] = Directory(kwargs[key])
+            else:
+                self._children[key] = kwargs[key]
+            self._children[key]._env = self
             self._children[key].apply_config(ConfigApplicator(self.config))
             self._children[key].prepare()
 

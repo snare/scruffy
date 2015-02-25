@@ -57,3 +57,25 @@ def test_environment_full():
     e.string_dir.create()
     assert os.path.exists('/tmp/scruffy_string_dir')
     e.string_dir.remove()
+
+def test_environment_add():
+    e = Environment(
+        dir=Directory('tests/env1',
+            config=ConfigFile('json_config', defaults='default.cfg'),
+            otherconfig=ConfigFile('json_config2')
+        )
+    )
+    e.add(
+        config_var_dir=Directory(e.config.somedir, create=True),
+        somefile=scruffy.File(e.config.somefile),
+        string_dir='/tmp/scruffy_string_dir'
+    )
+    assert os.path.exists('/tmp/scruffy_test_dir')
+    assert e.config_var_dir.exists
+    assert e.config_var_dir.path == '/tmp/scruffy_test_dir'
+    e.config_var_dir.remove()
+    assert not os.path.exists('/tmp/scruffy_test_dir')
+    assert e.somefile.content.strip() == 'thing'
+    e.config_var_dir.create()
+    assert os.path.exists('/tmp/scruffy_string_dir')
+    e.config_var_dir.remove()

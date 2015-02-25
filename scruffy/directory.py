@@ -40,11 +40,7 @@ class Directory(object):
         if self._path and type(self._path) == str:
             self._path = os.path.expanduser(self._path)
 
-        for k in kwargs:
-            if type(kwargs[k]) == str:
-                kwargs[k] = File(kwargs[k])
-            kwargs[k]._parent = self
-            self._children[k] = kwargs[k]
+        self.add(**kwargs)
 
     def __enter__(self):
         self.create()
@@ -160,6 +156,18 @@ class Directory(object):
         with open(self.path_to(filename)) as f:
             d = f.read()
         return d
+
+    def add(self, **kwargs):
+        """
+        Add objects to the directory.
+        """
+        for key in kwargs:
+            if type(kwargs[key]) == str:
+                self._children[key] = File(kwargs[key])
+            else:
+                self._children[key] = kwargs[key]
+            self._children[key]._parent = self
+            self._children[key]._env = self._env
 
 
 class PluginDirectory(Directory):
