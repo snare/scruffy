@@ -26,10 +26,9 @@ class Environment(object):
 
         # setup logging
         if setup_logging:
-            d = self.config.logging.dict_config.to_dict()
-            if d:
+            if self.config != None and self.config.logging.dict_config != None:
                 # configure logging from the configuration
-                logging.config.dictConfig(d)
+                logging.config.dictConfig(self.config.logging.dict_config.to_dict())
             else:
                 # no dict config, set up a basic config so we at least get messages logged to stdout
                 log = logging.getLogger()

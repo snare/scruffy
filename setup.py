@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-    name = "scruffy",
+    name = "scruffington",
     version = "0.3",
     author = "snare",
     author_email = "snare@ho.ax",
