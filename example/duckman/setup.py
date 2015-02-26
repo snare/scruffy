@@ -15,6 +15,5 @@ setup(
     entry_points = {
         'console_scripts': ['duckman = duckman:main']
     },
-    install_requires = ['scruffy'],
-    dependency_links = ["https://github.com/snarez/scruffy/tarball/master#egg=scruffy"]
+    install_requires = ['scruffington']
 )
