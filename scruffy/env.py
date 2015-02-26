@@ -34,7 +34,7 @@ class Environment(object):
                 # no dict config, set up a basic config so we at least get messages logged to stdout
                 log = logging.getLogger()
                 log.setLevel(logging.INFO)
-                if len(filter(lambda h: isinstance(h, logging.StreamHandler), log.handlers)) == 0:
+                if len(list(filter(lambda h: isinstance(h, logging.StreamHandler), log.handlers))) == 0:
                     log.addHandler(logging.StreamHandler())
 
         # add children
@@ -57,6 +57,9 @@ class Environment(object):
         Find a config in our children so we can fill in variables in our other
         children with its data.
         """
+        named_config = None
+        found_config = None
+
         # first see if we got a kwarg named 'config', as this guy is special
         if 'config' in children:
             if type(children['config']) == str:
@@ -67,19 +70,27 @@ class Environment(object):
                 children['config'] = Config(data=children['config'])
             else:
                 raise TypeError("Don't know how to turn {} into a Config".format(type(children['config'])))
-            return children['config']
+
+            named_config = children['config']
 
         # next check the other kwargs
         for k in children:
             if isinstance(children[k], Config):
-                return children[k]
+                found_config = children[k]
 
         # if we still don't have a config, see if there's a directory with one
         for k in children:
             if isinstance(children[k], Directory):
                 for j in children[k]._children:
+                    if j == 'config' and not named_config:
+                        named_config = children[k]._children[j]
                     if isinstance(children[k]._children[j], Config):
-                        return children[k]._children[j]
+                        found_config = children[k]._children[j]
+
+        if named_config:
+            return named_config
+        else:
+            return found_config
 
     def add(self, **kwargs):
         """
