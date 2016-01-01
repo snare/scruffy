@@ -308,7 +308,7 @@ class ConfigFile(Config, File):
         """
         Save the config back to the config file.
         """
-        self.write(yaml.dump(self._data))
+        self.write(yaml.safe_dump(self._data))
 
     def prepare(self):
         """
