@@ -1,7 +1,7 @@
 import os
 import logging
 
-from scruffy import File, LockFile, ConfigFile, ConfigEnv, LogFile
+from scruffy import *
 
 
 def safe_unlink(path):
@@ -69,3 +69,7 @@ def test_log_file():
     with open(f.path) as fi:
         assert fi.read().strip() == "test"
     f.remove()
+
+def test_package_file():
+    f = PackageFile('xxx', package='scruffy')
+    assert f.path == os.path.join(os.getcwd(), 'scruffy/xxx')

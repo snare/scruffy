@@ -210,3 +210,10 @@ class PackageDirectory(Directory):
         else:
             raise Exception('No package found')
 
+
+class PackageFile(File):
+    """
+    A file whose path is relative to a Python package.
+    """
+    def __init__(self, path=None, create=False, cleanup=False, parent=None, package=None):
+        super(PackageFile, self).__init__(path=path, create=create, cleanup=cleanup, parent=PackageDirectory(package=package))
