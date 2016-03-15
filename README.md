@@ -1,6 +1,8 @@
 Scruffy
 =======
 
+![build](https://travis-ci.org/snare/scruffy.svg?branch=master)
+
 *Scruffy. The Janitor.*
 
 Scruffy is a framework for managing the environment in which a Python-based tool runs. It handles the loading of configuration files, the loading and management of plugins, and the management of other filesystem resources such as temporary files and directories, log files, etc.
@@ -42,7 +44,7 @@ Load a user config file, and apply it on top of a set of defaults loaded from in
 *thingy.yaml*:
 ```yaml
 some_property:  1
-other_property: a thing 
+other_property: a thing
 ```
 
 *thingy.py*:
