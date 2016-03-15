@@ -19,8 +19,6 @@ A typical use case for Scruffy is a command-line Python tool with some or all of
 
 Scruffy is used by [Voltron](https://github.com/snare/voltron) and [Calculon](https://github.com/snare/calculon).
 
-**Note: Scruffy has been completely redesigned.** In the unlikely event that anyone apart from @snare was using it, you might wanna either update your app to use the new format, or stick to v0.2.2.
-
 Installation
 ------------
 
