@@ -5,7 +5,7 @@ Scruffy
 
 *Scruffy. The Janitor.*
 
-Scruffy is a framework for managing the environment in which a Python-based tool runs. It handles the loading of configuration files, the loading and management of plugins, and the management of other filesystem resources such as temporary files and directories, log files, etc.
+Scruffy is a framework for taking care of a bunch of boilerplate in Python apps. It handles the loading of configuration files, the loading and management of plugins, and the management of other filesystem resources such as temporary files and directories, log files, etc.
 
 A typical use case for Scruffy is a command-line Python tool with some or all of the following requirements:
 
@@ -26,7 +26,7 @@ A standard python setup script is included.
 
     $ python setup.py install
 
-This will install the Scruffy egg wherever that happens on your system.
+This will install the Scruffy package wherever that happens on your system.
 
 Alternately, Scruffy can be installed with `pip` from PyPi (where it's called `scruffington`, because I didn't check for a conflict before I named it).
 
@@ -156,11 +156,9 @@ See the [issue tracker](https://github.com/snare/voltron/issues) on github.
 License
 -------
 
-This software is released under the "Buy snare a beer" license. If you use this and don't hate it, buy me a beer at a conference some time.
+See LICENSE file. If you use this and don't hate it, buy me a beer at a conference some time.
 
 Credits
 -------
-
-Thanks to Azimuth Security for letting me spend time working on this and other stupid projects.
 
 Props to [richo](http://github.com/richo). Flat duck pride.
