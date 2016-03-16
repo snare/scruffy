@@ -1,4 +1,9 @@
 import os
+try:
+    import sqlalchemy
+    HAVE_SQLALCHEMY = True
+except:
+    HAVE_SQLALCHEMY = False
 
 from nose.tools import *
 from scruffy.state import *
@@ -29,21 +34,22 @@ def test_with():
     assert s2['yyy'] == 123
     s2.cleanup()
 
-def test_db_state():
-    url='sqlite:///'
-    s = DBState.state(url)
-    s['xxx'] = 1
-    s.save()
-    assert s.d == {'xxx': 1}
-    s2 = DBState.state(url)
-    assert s2['xxx'] == 1
-    s.cleanup()
-    assert s['xxx'] == None
+if HAVE_SQLALCHEMY:
+    def test_db_state():
+        url='sqlite:///'
+        s = DBState.state(url)
+        s['xxx'] = 1
+        s.save()
+        assert s.d == {'xxx': 1}
+        s2 = DBState.state(url)
+        assert s2['xxx'] == 1
+        s.cleanup()
+        assert s['xxx'] == None
 
-def test_db_state_with():
-    url='sqlite:///'
-    with DBState.state(url) as s:
-        s['yyy'] = 123
-    s2 = DBState.state(url)
-    assert s2['yyy'] == 123
-    s2.cleanup()
+    def test_db_state_with():
+        url='sqlite:///'
+        with DBState.state(url) as s:
+            s['yyy'] = 123
+        s2 = DBState.state(url)
+        assert s2['yyy'] == 123
+        s2.cleanup()
