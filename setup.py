@@ -10,5 +10,5 @@ setup(
     keywords="scruffy",
     url="https://github.com/snare/scruffy",
     packages=['scruffy'],
-    install_requires=['pyyaml', 'sqlalchemy', 'six'],
+    install_requires=['pyyaml', 'six'],
 )
