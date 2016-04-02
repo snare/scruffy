@@ -5,15 +5,16 @@ import logging
 import logging.config
 import inspect
 import pkg_resources
+import shutil
 
 from .plugin import PluginManager
 
 
 class File(object):
     """
-    Represents a file on the filesystem.
+    Represents a file that may or may not exist on the filesystem.
 
-    Usually encapsulated in a Directory.
+    Usually encapsulated by a Directory or an Environment.
     """
     def __init__(self, path=None, create=False, cleanup=False, parent=None):
         super(File, self).__init__()
@@ -31,6 +32,9 @@ class File(object):
 
     def __exit__(self, type, value, traceback):
         self.cleanup()
+
+    def __str__(self):
+        return self.path
 
     def apply_config(self, applicator):
         """
@@ -79,6 +83,20 @@ class File(object):
             return os.path.join(self._parent.path, self._fpath)
         else:
             return self._fpath
+
+    @property
+    def name(self):
+        """
+        Get the file name.
+        """
+        return os.path.basename(self.path)
+
+    @property
+    def ext(self):
+        """
+        Get the file's extension.
+        """
+        return os.path.splitext(self.path)[1]
 
     @property
     def content(self):
@@ -296,14 +314,18 @@ class Directory(object):
         if not self.exists:
             os.mkdir(self.path)
 
-    def remove(self, recursive=False):
+    def remove(self, recursive=True, ignore_error=True):
         """
         Remove the directory.
         """
-        if recursive or self._cleanup == 'recursive':
-            os.removedirs(self.path)
-        else:
-            os.rmdir(self.path)
+        try:
+            if recursive or self._cleanup == 'recursive':
+                shutil.rmtree(self.path)
+            else:
+                os.rmdir(self.path)
+        except Exception as e:
+            if not ignore_error:
+                raise e
 
     def prepare(self):
         """
@@ -327,7 +349,7 @@ class Directory(object):
             self._children[k].cleanup()
 
         if self._cleanup:
-            self.remove()
+            self.remove(True)
 
     def path_to(self, path):
         """
@@ -346,14 +368,14 @@ class Directory(object):
         """
         List the contents of the directory.
         """
-        return os.listdir(self.path)
+        return [File(f, parent=self) for f in os.listdir(self.path)]
 
-    def write(self, filename, mode='w'):
+    def write(self, filename, data, mode='w'):
         """
-        Write a file in the directory.
+        Write to a file in the directory.
         """
         with open(self.path_to(filename), mode) as f:
-            f.write()
+            f.write(data)
 
     def read(self, filename):
         """
@@ -363,17 +385,38 @@ class Directory(object):
             d = f.read()
         return d
 
-    def add(self, **kwargs):
+    def add(self, *args, **kwargs):
         """
         Add objects to the directory.
         """
         for key in kwargs:
-            if type(kwargs[key]) == str:
+            if isinstance(kwargs[key], str):
                 self._children[key] = File(kwargs[key])
             else:
                 self._children[key] = kwargs[key]
             self._children[key]._parent = self
             self._children[key]._env = self._env
+
+        added = []
+        for arg in args:
+            if isinstance(arg, File):
+                self._children[arg.name] = arg
+                self._children[arg.name]._parent = self
+                self._children[arg.name]._env = self._env
+            elif isinstance(arg, str):
+                f = File(arg)
+                added.append(f)
+                self._children[arg] = f
+                self._children[arg]._parent = self
+                self._children[arg]._env = self._env
+            else:
+                raise TypeError(type(arg))
+
+        # if we were passed a single file/filename, return the File object for convenience
+        if len(added) == 1:
+            return added[0]
+        if len(args) == 1:
+            return args[0]
 
 
 class PluginDirectory(Directory):
