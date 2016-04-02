@@ -5,7 +5,7 @@ import errno
 import logging
 import logging.config
 
-from .directory import Directory
+from .file import Directory
 from .plugin import PluginManager
 from .config import ConfigNode, Config, ConfigEnv, ConfigApplicator
 
