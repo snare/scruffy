@@ -184,4 +184,6 @@ See LICENSE file. If you use this and don't hate it, buy me a beer at a conferen
 Credits
 -------
 
-Props to [richo](http://github.com/richo). Flat duck pride.
+Props to richo_. Flat duck pride.
+
+.. _richo: http://github.com/richo
