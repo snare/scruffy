@@ -46,7 +46,8 @@ Alternately, Scruffy can be installed with `pip` from PyPi (where it's called `s
 Quick start
 -----------
 
-### Config
+Config
+~~~~~~
 
 Load a user config file, and apply it on top of a set of defaults loaded from inside the Python package we're currently running from.
 
@@ -78,7 +79,8 @@ Run it:
     c.some_property == 1
     c.other_property == a thing
 
-### Plugins
+Plugins
+~~~~~~~
 
 Load some plugins.
 
@@ -113,7 +115,8 @@ Run it:
     Initialising plugin <class 'example.ExamplePlugin'>
     example.ExamplePlugin is doing a thing
 
-### Logging
+Logging
+~~~~~~~
 
 Scruffy's `LogFile` class will do some configuration of Python's `logging` module.
 
@@ -136,7 +139,8 @@ Scruffy's `LogFile` class will do some configuration of Python's `logging` modul
 
     Hello from log.py
 
-### Environment
+Environment
+~~~~~~~~~~~
 
 Scruffy's `Environment` class ties all the other stuff together. The other classes can be instantiated as named children of an `Environment`, which will load any `Config` objects, apply the configs to the other objects, and then prepare the other objects.
 
