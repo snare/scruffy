@@ -7,9 +7,6 @@ Scruffy
 .. image:: https://img.shields.io/pypi/format/scruffington.svg
     :target: https://pypi.python.org/pypi/scruffington
 
-.. image:: https://readthedocs.org/projects/scruffy/badge/?version=stable
-    :target: http://scruffy.readthedocs.org/en/stable/
-
 .. image:: https://readthedocs.org/projects/scruffy/badge/?version=latest
     :target: http://scruffy.readthedocs.org/en/latest/
 
