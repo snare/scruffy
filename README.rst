@@ -155,15 +155,6 @@ e = Environment(
 )
 ```
 
-Documentation
--------------
-
-See the [wiki](https://github.com/snare/scruffy/wiki) on github.
-
-## Bugs
-
-See the [issue tracker](https://github.com/snare/voltron/issues) on github.
-
 License
 -------
 
