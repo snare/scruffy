@@ -1,3 +1,8 @@
+"""
+File
+
+Classes for storing a program's state.
+"""
 import os
 import yaml
 

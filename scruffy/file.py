@@ -1,3 +1,8 @@
+"""
+File
+
+Classes for representing and performing operations on files and directories.
+"""
 import os
 import yaml
 import copy

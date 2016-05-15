@@ -1,3 +1,9 @@
+"""
+Config
+------
+
+Classes for loading and accessing configuration data.
+"""
 import copy
 import os
 import ast

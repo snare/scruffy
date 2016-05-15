@@ -1,3 +1,9 @@
+"""
+Environment
+
+Classes for representing the encompassing environment in which your application
+runs.
+"""
 import os
 import yaml
 import itertools

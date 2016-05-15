@@ -1,3 +1,8 @@
+"""
+File
+
+Classes for representing and loading plugins.
+"""
 import os
 import imp
 import six
