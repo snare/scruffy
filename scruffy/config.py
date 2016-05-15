@@ -27,7 +27,7 @@ class ConfigNode(object):
 
     Or as an object, like this:
 
-        config.top_level_section.second_level_property
+        >>> config.top_level_section.second_level_property
     """
     def __init__(self, data={}, defaults={}, root=None, path=None):
         super(ConfigNode, self).__init__()
