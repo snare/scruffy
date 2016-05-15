@@ -1,5 +1,6 @@
 """
 File
+----
 
 Classes for representing and performing operations on files and directories.
 """

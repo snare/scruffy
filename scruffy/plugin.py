@@ -1,5 +1,6 @@
 """
-File
+Plugin
+------
 
 Classes for representing and loading plugins.
 """
