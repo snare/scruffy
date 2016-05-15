@@ -38,7 +38,7 @@ class File(object):
 
     def apply_config(self, applicator):
         """
-        Replace any config tokens with values from the config.
+        Replace any config tokens in the file's path with values from the config.
         """
         if type(self._fpath) == str:
             self._fpath = applicator.apply(self._fpath)
@@ -51,7 +51,7 @@ class File(object):
 
     def remove(self):
         """
-        Remove the file.
+        Remove the file if it exists.
         """
         if self.exists:
             os.unlink(self.path)
@@ -237,14 +237,14 @@ class Directory(object):
     A Scruffy Environment usually encompasses a number of these. For example,
     the main Directory object may represent `~/.myproject`.
 
-    d = Directory({
-        path='~/.myproject',
-        create=True,
-        cleanup=False,
-        children=[
-        ...
-        ]
-    })
+    >>> d = Directory({
+    ...     path='~/.myproject',
+    ...     create=True,
+    ...     cleanup=False,
+    ...     children=[
+    ...     ...
+    ...     ]
+    ... })
 
     `path` can be either a string representing the path to the directory, or
     a nested Directory object. If a Directory object is passed as the `path`
@@ -355,7 +355,7 @@ class Directory(object):
         """
         Find the path to something inside this directory.
         """
-        return os.path.join(self.path, path)
+        return os.path.join(self.path, str(path))
 
     @property
     def exists(self):
@@ -374,14 +374,14 @@ class Directory(object):
         """
         Write to a file in the directory.
         """
-        with open(self.path_to(filename), mode) as f:
+        with open(self.path_to(str(filename)), mode) as f:
             f.write(data)
 
     def read(self, filename):
         """
         Read a file from the directory.
         """
-        with open(self.path_to(filename)) as f:
+        with open(self.path_to(str(filename))) as f:
             d = f.read()
         return d
 

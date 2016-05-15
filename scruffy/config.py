@@ -13,11 +13,11 @@ class ConfigNode(object):
 
     Can be accessed as a dictionary, like this:
 
-        config['top-level-section']['second-level-property']
+        >>> config['top-level-section']['second-level-property']
 
     Or as a dictionary with a key path, like this:
 
-        config['top_level_section.second_level_property']
+        >>> config['top_level_section.second_level_property']
 
     Or as an object, like this:
 
@@ -195,22 +195,22 @@ class ConfigNode(object):
 
         `options` is a dict of keypath/value pairs like this (similar to
         CherryPy's config mechanism:
-        {
-            'server.port': 8080,
-            'server.host': 'localhost',
-            'admin.email': 'admin@lol'
-        }
+        >>> {
+        ...     'server.port': 8080,
+        ...     'server.host': 'localhost',
+        ...     'admin.email': 'admin@lol'
+        ... }
 
         `data` is a dict of actual config data, like this:
-        {
-            'server': {
-                'port': 8080,
-                'host': 'localhost'
-            },
-            'admin': {
-                'email': 'admin@lol'
-            }
-        }
+        >>> {
+        ...     'server': {
+        ...         'port': 8080,
+        ...         'host': 'localhost'
+        ...     },
+        ...     'admin': {
+        ...         'email': 'admin@lol'
+        ...     }
+        ... }
         """
         # Handle an update with a set of options like CherryPy does
         for key in options:
@@ -370,20 +370,23 @@ def update_dict(target, source):
     dictionary.
 
     For example:
-    target before = {
-        'thing': 123,
-        'thang': {
-            'a': 1,
-            'b': 2
-        }
-    }
-    source = {
-        'thang': {
-            'a': 666,
-            'c': 777
-        }
-    }
-    target after = {
+
+    >>> target = {
+    ...     'thing': 123,
+    ...     'thang': {
+    ...         'a': 1,
+    ...         'b': 2
+    ...     }
+    ... }
+    >>> source = {
+    ...     'thang': {
+    ...         'a': 666,
+    ...         'c': 777
+    ...     }
+    ... }
+    >>> update_dict(target, source)
+    >>> target
+    {
         'thing': 123,
         'thang': {
             'a': 666,
