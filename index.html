@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Scruffy : Scruffy. The Janitor.">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Scruffy</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/snare/scruffy">View on GitHub</a>
+
+          <h1 id="project_title">Scruffy</h1>
+          <h2 id="project_tagline">Scruffy. The Janitor.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/snare/scruffy/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/snare/scruffy/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="scruffy" class="anchor" href="#scruffy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Scruffy</h1>
+
+<p><img src="https://travis-ci.org/snare/scruffy.svg?branch=master" alt="build"></p>
+
+<p><em>Scruffy. The Janitor.</em></p>
+
+<p>Scruffy is a framework for taking care of a bunch of boilerplate in Python apps. It handles the loading of configuration files, the loading and management of plugins, and the management of other filesystem resources such as temporary files and directories, log files, etc.</p>
+
+<p>A typical use case for Scruffy is a command-line Python tool with some or all of the following requirements:</p>
+
+<ul>
+<li>Read a set of configuration defaults</li>
+<li>Read a local configuration file and apply it on top of the defaults</li>
+<li>Allow overriding some configuration options with command line flags or at runtime</li>
+<li>Load a core set of Python-based plugins</li>
+<li>Load a set of user-defined Python-based plugins</li>
+<li>Generate log files whose name, location and other logging settings are based on configuration</li>
+<li>Store application state between runs in a file or database</li>
+</ul>
+
+<p>Scruffy is used by <a href="https://github.com/snare/voltron">Voltron</a> and <a href="https://github.com/snare/calculon">Calculon</a>.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>A standard python setup script is included.</p>
+
+<pre><code>$ python setup.py install
+</code></pre>
+
+<p>This will install the Scruffy package wherever that happens on your system.</p>
+
+<p>Alternately, Scruffy can be installed with <code>pip</code> from PyPi (where it's called <code>scruffington</code>, because I didn't check for a conflict before I named it).</p>
+
+<pre><code>$ pip install scruffington
+</code></pre>
+
+<h2>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick start</h2>
+
+<h3>
+<a id="config" class="anchor" href="#config" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Config</h3>
+
+<p>Load a user config file, and apply it on top of a set of defaults loaded from inside the Python package we're currently running from.</p>
+
+<p><em>thingy.yaml</em>:</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-c1"><span class="pl-ent">some_property:</span>  1</span>
+<span class="pl-s"><span class="pl-ent">other_property:</span> <span class="pl-s">a thing</span></span></pre></div>
+
+<p><em>thingy.py</em>:</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> scruffy <span class="pl-k">import</span> ConfigFile
+
+c <span class="pl-k">=</span> ConfigFile(<span class="pl-s"><span class="pl-pds">'</span>thingy.yaml<span class="pl-pds">'</span></span>, <span class="pl-v">load</span><span class="pl-k">=</span><span class="pl-c1">True</span>,
+    <span class="pl-v">defaults</span><span class="pl-k">=</span>File(<span class="pl-s"><span class="pl-pds">'</span>defaults.yaml<span class="pl-pds">'</span></span>, <span class="pl-v">parent</span><span class="pl-k">=</span>PackageDirectory())
+)
+
+<span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">"</span>c.some_property == <span class="pl-c1">{c.some_property}</span><span class="pl-pds">"</span></span>.format(<span class="pl-v">c</span><span class="pl-k">=</span>c))
+<span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">"</span>c.other_property == <span class="pl-c1">{c.other_property}</span><span class="pl-pds">"</span></span>.format(<span class="pl-v">c</span><span class="pl-k">=</span>c))</pre></div>
+
+<p>Run it:</p>
+
+<pre><code>$ python thingy.py
+c.some_property == 1
+c.other_property == a thing
+</code></pre>
+
+<h3>
+<a id="plugins" class="anchor" href="#plugins" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Plugins</h3>
+
+<p>Load some plugins.</p>
+
+<p><em>~/.thingy/plugins/example.py</em>:</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> scruffy <span class="pl-k">import</span> Plugin
+
+<span class="pl-k">class</span> <span class="pl-en">ExamplePlugin</span>(<span class="pl-e">Plugin</span>):
+    <span class="pl-k">def</span> <span class="pl-en">do_a_thing</span>(<span class="pl-smi"><span class="pl-smi">self</span></span>):
+        <span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-c1">{}</span>.<span class="pl-c1">{}</span> is doing a thing<span class="pl-pds">'</span></span>.format(<span class="pl-c1">__name__</span>, <span class="pl-v">self</span>.<span class="pl-c1">__class__</span>.<span class="pl-c1">__name__</span>))</pre></div>
+
+<p><em>thingy.py</em>:</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> scruffy <span class="pl-k">import</span> PluginDirectory, PluginRegistry
+
+pd <span class="pl-k">=</span> PluginDirectory(<span class="pl-s"><span class="pl-pds">'</span>~/.thingy/plugins<span class="pl-pds">'</span></span>)
+pd.load()
+
+<span class="pl-k">for</span> p <span class="pl-k">in</span> PluginRegistry.plugins:
+    <span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">"</span>Initialising plugin <span class="pl-c1">{}</span><span class="pl-pds">"</span></span>.format(p))
+    p().do_a_thing()</pre></div>
+
+<p>Run it:</p>
+
+<pre><code>$ python thingy.py
+Initialising plugin &lt;class 'example.ExamplePlugin'&gt;
+example.ExamplePlugin is doing a thing
+</code></pre>
+
+<h3>
+<a id="logging" class="anchor" href="#logging" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Logging</h3>
+
+<p>Scruffy's <code>LogFile</code> class will do some configuration of Python's <code>logging</code> module.</p>
+
+<p><em>log.py</em>:</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> logging
+<span class="pl-k">from</span> scruffy <span class="pl-k">import</span> LogFile
+
+log <span class="pl-k">=</span> logging.getLogger(<span class="pl-s"><span class="pl-pds">'</span>main<span class="pl-pds">'</span></span>)
+log.setLevel(logging.<span class="pl-c1">INFO</span>)
+LogFile(<span class="pl-s"><span class="pl-pds">'</span>/tmp/thingy.log<span class="pl-pds">'</span></span>, <span class="pl-v">logger</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">'</span>main<span class="pl-pds">'</span></span>).configure()
+
+log.info(<span class="pl-s"><span class="pl-pds">'</span>Hello from log.py<span class="pl-pds">'</span></span>)</pre></div>
+
+<p><em>/tmp/thingy.log</em>:</p>
+
+<pre><code>Hello from log.py
+</code></pre>
+
+<h3>
+<a id="environment" class="anchor" href="#environment" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Environment</h3>
+
+<p>Scruffy's <code>Environment</code> class ties all the other stuff together. The other classes can be instantiated as named children of an <code>Environment</code>, which will load any <code>Config</code> objects, apply the configs to the other objects, and then prepare the other objects.</p>
+
+<p><em>~/.thingy/config</em>:</p>
+
+<div class="highlight highlight-source-yaml"><pre><span class="pl-s"><span class="pl-ent">log_dir:</span>    <span class="pl-s">/tmp/logs</span></span>
+<span class="pl-s"><span class="pl-ent">log_file:</span>   <span class="pl-s">thingy.log</span></span></pre></div>
+
+<p><em>env.py</em>:</p>
+
+<div class="highlight highlight-source-python"><pre><span class="pl-k">from</span> scruffy <span class="pl-k">import</span> <span class="pl-k">*</span>
+
+e <span class="pl-k">=</span> Environment(
+    <span class="pl-v">main_dir</span><span class="pl-k">=</span>Directory(<span class="pl-s"><span class="pl-pds">'</span>~/.thingy<span class="pl-pds">'</span></span>, <span class="pl-v">create</span><span class="pl-k">=</span><span class="pl-c1">True</span>,
+        <span class="pl-v">config</span><span class="pl-k">=</span>ConfigFile(<span class="pl-s"><span class="pl-pds">'</span>config<span class="pl-pds">'</span></span>, <span class="pl-v">defaults</span><span class="pl-k">=</span>File(<span class="pl-s"><span class="pl-pds">'</span>defaults.yaml<span class="pl-pds">'</span></span>, <span class="pl-v">parent</span><span class="pl-k">=</span>PackageDirectory())),
+        <span class="pl-v">lock</span><span class="pl-k">=</span>LockFile(<span class="pl-s"><span class="pl-pds">'</span>lock<span class="pl-pds">'</span></span>)
+        <span class="pl-v">user_plugins</span><span class="pl-k">=</span>PluginDirectory(<span class="pl-s"><span class="pl-pds">'</span>plugins<span class="pl-pds">'</span></span>)
+    ),
+    <span class="pl-v">log_dir</span><span class="pl-k">=</span>Directory(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-c1">{config<span class="pl-c1">:</span>log_dir}</span><span class="pl-pds">'</span></span>, <span class="pl-v">create</span><span class="pl-k">=</span><span class="pl-c1">True</span>
+        LogFile(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-c1">{config<span class="pl-c1">:</span>log_file}</span><span class="pl-pds">'</span></span>, <span class="pl-v">logger</span><span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">'</span>main<span class="pl-pds">'</span></span>)
+    ),
+    <span class="pl-v">pkg_plugins</span><span class="pl-k">=</span>PluginDirectory(<span class="pl-s"><span class="pl-pds">'</span>plugins<span class="pl-pds">'</span></span>, <span class="pl-v">parent</span><span class="pl-k">=</span>PackageDirectory())
+)</pre></div>
+
+<h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>See the <a href="https://github.com/snare/scruffy/wiki">wiki</a> on github.</p>
+
+<h2>
+<a id="bugs" class="anchor" href="#bugs" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Bugs</h2>
+
+<p>See the <a href="https://github.com/snare/voltron/issues">issue tracker</a> on github.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>See LICENSE file. If you use this and don't hate it, buy me a beer at a conference some time.</p>
+
+<h2>
+<a id="credits" class="anchor" href="#credits" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits</h2>
+
+<p>Props to <a href="http://github.com/richo">richo</a>. Flat duck pride.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Scruffy maintained by <a href="https://github.com/snare">snare</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
