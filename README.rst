@@ -28,7 +28,10 @@ A typical use case for Scruffy is a command-line Python tool with some or all of
 * Generate log files whose name, location and other logging settings are based on configuration
 * Store application state between runs in a file or database
 
-Scruffy is used by [Voltron](https://github.com/snare/voltron) and [Calculon](https://github.com/snare/calculon).
+Scruffy is used by Voltron_ and Calculon_
+
+.. _Voltron: https://github.com/snare/voltron
+.. _Calculon: https://github.com/snare/calculon
 
 Installation
 ------------
@@ -42,6 +45,13 @@ This will install the Scruffy package wherever that happens on your system.
 Alternately, Scruffy can be installed with `pip` from PyPi (where it's called `scruffington`, because I didn't check for a conflict before I named it).
 
     $ pip install scruffington
+
+Documentation
+-------------
+
+Full documentation is hosted at readthedocs_
+
+.. _readthedocs: http://scruffy.readthedocs.io/
 
 Quick start
 -----------
