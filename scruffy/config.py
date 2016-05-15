@@ -202,15 +202,15 @@ class ConfigNode(object):
         `options` is a dict of keypath/value pairs like this (similar to
         CherryPy's config mechanism:
 
-            >>> {
+            >>> c.update(options={
             ...     'server.port': 8080,
             ...     'server.host': 'localhost',
             ...     'admin.email': 'admin@lol'
-            ... }
+            ... })
 
         `data` is a dict of actual config data, like this:
 
-            >>> {
+            >>> c.update(data={
             ...     'server': {
             ...         'port': 8080,
             ...         'host': 'localhost'
@@ -218,7 +218,7 @@ class ConfigNode(object):
             ...     'admin': {
             ...         'email': 'admin@lol'
             ...     }
-            ... }
+            ... })
         """
         # Handle an update with a set of options like CherryPy does
         for key in options:
