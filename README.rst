@@ -51,109 +51,119 @@ Quick start
 Load a user config file, and apply it on top of a set of defaults loaded from inside the Python package we're currently running from.
 
 *thingy.yaml*:
-```yaml
-some_property:  1
-other_property: a thing
-```
+
+.. code:: yaml
+
+    some_property:  1
+    other_property: a thing
 
 *thingy.py*:
-```python
-from scruffy import ConfigFile
 
-c = ConfigFile('thingy.yaml', load=True,
-    defaults=File('defaults.yaml', parent=PackageDirectory())
-)
+.. code:: python
 
-print("c.some_property == {c.some_property}".format(c=c))
-print("c.other_property == {c.other_property}".format(c=c))
-```
+    from scruffy import ConfigFile
+
+    c = ConfigFile('thingy.yaml', load=True,
+        defaults=File('defaults.yaml', parent=PackageDirectory())
+    )
+
+    print("c.some_property == {c.some_property}".format(c=c))
+    print("c.other_property == {c.other_property}".format(c=c))
 
 Run it:
-```
-$ python thingy.py
-c.some_property == 1
-c.other_property == a thing
-```
+
+::
+
+    $ python thingy.py
+    c.some_property == 1
+    c.other_property == a thing
 
 ### Plugins
 
 Load some plugins.
 
 *~/.thingy/plugins/example.py*:
-```python
-from scruffy import Plugin
 
-class ExamplePlugin(Plugin):
-    def do_a_thing(self):
-        print('{}.{} is doing a thing'.format(__name__, self.__class__.__name__))
-```
+.. code:: python
+
+    from scruffy import Plugin
+
+    class ExamplePlugin(Plugin):
+        def do_a_thing(self):
+            print('{}.{} is doing a thing'.format(__name__, self.__class__.__name__))
 
 *thingy.py*:
-```python
-from scruffy import PluginDirectory, PluginRegistry
 
-pd = PluginDirectory('~/.thingy/plugins')
-pd.load()
+.. code:: python
 
-for p in PluginRegistry.plugins:
-    print("Initialising plugin {}".format(p))
-    p().do_a_thing()
-```
+    from scruffy import PluginDirectory, PluginRegistry
+
+    pd = PluginDirectory('~/.thingy/plugins')
+    pd.load()
+
+    for p in PluginRegistry.plugins:
+        print("Initialising plugin {}".format(p))
+        p().do_a_thing()
 
 Run it:
-```
-$ python thingy.py
-Initialising plugin <class 'example.ExamplePlugin'>
-example.ExamplePlugin is doing a thing
-```
+
+::
+
+    $ python thingy.py
+    Initialising plugin <class 'example.ExamplePlugin'>
+    example.ExamplePlugin is doing a thing
 
 ### Logging
 
 Scruffy's `LogFile` class will do some configuration of Python's `logging` module.
 
 *log.py*:
-```python
-import logging
-from scruffy import LogFile
 
-log = logging.getLogger('main')
-log.setLevel(logging.INFO)
-LogFile('/tmp/thingy.log', logger='main').configure()
+.. code:: python
 
-log.info('Hello from log.py')
-```
+    import logging
+    from scruffy import LogFile
+
+    log = logging.getLogger('main')
+    log.setLevel(logging.INFO)
+    LogFile('/tmp/thingy.log', logger='main').configure()
+
+    log.info('Hello from log.py')
 
 */tmp/thingy.log*:
-```
-Hello from log.py
-```
+
+::
+
+    Hello from log.py
 
 ### Environment
 
 Scruffy's `Environment` class ties all the other stuff together. The other classes can be instantiated as named children of an `Environment`, which will load any `Config` objects, apply the configs to the other objects, and then prepare the other objects.
 
 *~/.thingy/config*:
-```yaml
-log_dir:    /tmp/logs
-log_file:   thingy.log
-```
+
+.. code:: yaml
+
+    log_dir:    /tmp/logs
+    log_file:   thingy.log
 
 *env.py*:
-```python
-from scruffy import *
 
-e = Environment(
-    main_dir=Directory('~/.thingy', create=True,
-        config=ConfigFile('config', defaults=File('defaults.yaml', parent=PackageDirectory())),
-        lock=LockFile('lock')
-        user_plugins=PluginDirectory('plugins')
-    ),
-    log_dir=Directory('{config:log_dir}', create=True
-        LogFile('{config:log_file}', logger='main')
-    ),
-    pkg_plugins=PluginDirectory('plugins', parent=PackageDirectory())
-)
-```
+.. code:: python
+
+    from scruffy import *
+
+    e = Environment(
+        main_dir=Directory('~/.thingy', create=True,
+            config=ConfigFile('config', defaults=File('defaults.yaml', parent=PackageDirectory())),
+            lock=LockFile('lock')
+            user_plugins=PluginDirectory('plugins')
+        ),
+        log_dir=Directory('{config:log_dir}', create=True
+            LogFile('{config:log_file}', logger='main')
+        ),
+        pkg_plugins=PluginDirectory('plugins', parent=PackageDirectory())
+    )
 
 License
 -------
