@@ -99,6 +99,9 @@ class ConfigNode(object):
     def __nonzero__(self):
         return self._get_value() != None
 
+    def __bool__(self):
+        return self._get_value() != None
+
     def items(self):
         return self._get_value().items()
 
