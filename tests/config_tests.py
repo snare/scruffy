@@ -32,6 +32,9 @@ def test_config_object():
     assert c['thang.d.b'] == 2
     assert c.derp[0] == {'a': 1}
     assert c.derp[0].a == 1
+    assert c.xxx == None
+    if c.xxx:
+        assert False
 
 def test_config_object_set():
     c = Config()

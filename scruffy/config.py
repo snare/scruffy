@@ -96,6 +96,9 @@ class ConfigNode(object):
     def __contains__(self, key):
         return key in self._get_value()
 
+    def __nonzero__(self):
+        return self._get_value() != None
+
     def items(self):
         return self._get_value().items()
 
