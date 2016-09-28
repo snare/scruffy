@@ -258,17 +258,17 @@ class ConfigEnv(ConfigNode):
     """
     Config based on based on environment variables.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, prefix='SCRUFFY', *args, **kwargs):
         super(ConfigEnv, self).__init__(*args, **kwargs)
 
-        # build options dictionary from environment variables starting with __SC_
+        # build options dictionary from environment variables starting with the prefix
         options = {}
-        for key in filter(lambda x: x.startswith('__SC_'), os.environ):
+        for key in [v for v in os.environ if v.startswith('__SC_') or v.startswith(prefix + '_')]:
             try:
                 val = ast.literal_eval(os.environ[key])
             except:
                 val = os.environ[key]
-            options[key.replace('__SC_', '').lower()] = val
+            options[key.replace('__SC_', '').replace(prefix + '_', '').lower()] = val
 
         # update config with the values we've found
         self.update(options=options)
@@ -278,10 +278,11 @@ class ConfigFile(Config, File):
     """
     Config based on a loaded YAML or JSON file.
     """
-    def __init__(self, path=None, defaults=None, load=False, apply_env=False, *args, **kwargs):
+    def __init__(self, path=None, defaults=None, load=False, apply_env=False, env_prefix='SCRUFFY', *args, **kwargs):
         self._loaded = False
         self._defaults_file = defaults
         self._apply_env = apply_env
+        self._env_prefix = env_prefix
         Config.__init__(self)
         File.__init__(self, path=path, *args, **kwargs)
 
@@ -312,7 +313,7 @@ class ConfigFile(Config, File):
 
             # if specified, apply environment variables
             if self._apply_env:
-                self.update(ConfigEnv())
+                self.update(ConfigEnv(self._env_prefix))
 
             self._loaded = True
 

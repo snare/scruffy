@@ -105,6 +105,36 @@ def test_config_env():
     assert c == {'test': {'a': {'a': {'a': 'AAAA', 'c': 1234.5678, 'b': 1234, 'd': 4660}}}}
     c = ConfigFile('tests/env1/config1', load=True, apply_env=True)
     assert c.test == {'a': {'a': {'a': 'AAAA', 'c': 1234.5678, 'b': 1234, 'd': 4660}}}
+    del os.environ['__SC_TEST.A.A.A']
+    del os.environ['__SC_TEST.A.A.B']
+    del os.environ['__SC_TEST.A.A.C']
+    del os.environ['__SC_TEST.A.A.D']
+
+    os.environ['SCRUFFY_TEST.A.A.A'] = 'AAAA'
+    os.environ['SCRUFFY_TEST.A.A.B'] = '1234'
+    os.environ['SCRUFFY_TEST.A.A.C'] = '1234.5678'
+    os.environ['SCRUFFY_TEST.A.A.D'] = '0x1234'
+    c = ConfigEnv()
+    assert c == {'test': {'a': {'a': {'a': 'AAAA', 'c': 1234.5678, 'b': 1234, 'd': 4660}}}}
+    c = ConfigFile('tests/env1/config1', load=True, apply_env=True)
+    assert c.test == {'a': {'a': {'a': 'AAAA', 'c': 1234.5678, 'b': 1234, 'd': 4660}}}
+    del os.environ['SCRUFFY_TEST.A.A.A']
+    del os.environ['SCRUFFY_TEST.A.A.B']
+    del os.environ['SCRUFFY_TEST.A.A.C']
+    del os.environ['SCRUFFY_TEST.A.A.D']
+
+    os.environ['THING_TEST.A.A.A'] = 'AAAA'
+    os.environ['THING_TEST.A.A.B'] = '1234'
+    os.environ['THING_TEST.A.A.C'] = '1234.5678'
+    os.environ['THING_TEST.A.A.D'] = '0x1234'
+    c = ConfigEnv(prefix='THING')
+    assert c == {'test': {'a': {'a': {'a': 'AAAA', 'c': 1234.5678, 'b': 1234, 'd': 4660}}}}
+    c = ConfigFile('tests/env1/config1', load=True, apply_env=True, env_prefix='THING')
+    assert c.test == {'a': {'a': {'a': 'AAAA', 'c': 1234.5678, 'b': 1234, 'd': 4660}}}
+    del os.environ['THING_TEST.A.A.A']
+    del os.environ['THING_TEST.A.A.B']
+    del os.environ['THING_TEST.A.A.C']
+    del os.environ['THING_TEST.A.A.D']
 
 def test_config_yaml():
     c = ConfigFile('tests/env1/yaml_config', defaults='tests/env1/default.cfg', load=True)
