@@ -4,7 +4,11 @@ File
 
 Classes for representing and performing operations on files and directories.
 """
+from __future__ import unicode_literals
+from builtins import str
+from builtins import object
 import os
+from six import string_types
 import yaml
 import copy
 import logging
@@ -46,7 +50,7 @@ class File(object):
         """
         Replace any config tokens in the file's path with values from the config.
         """
-        if type(self._fpath) == str:
+        if isinstance(self._fpath, string_types):
             self._fpath = applicator.apply(self._fpath)
 
     def create(self):
@@ -172,7 +176,7 @@ class LogFile(File):
 
         # if we got a string for the formatter, assume it's the name of a
         # formatter in the environment's config
-        if type(self._formatter) == str:
+        if isinstance(self._format, string_types):
             if self._env and self._env.config.logging.dict_config.formatters[self._formatter]:
                 d = self._env.config.logging.dict_config.formatters[self._formatter].to_dict()
                 handler.setFormatter(logging.Formatter(**d))
@@ -267,7 +271,7 @@ class Directory(object):
         self._env = None
         self._parent = parent
 
-        if self._path and type(self._path) == str:
+        if self._path and isinstance(self._path, string_types):
             self._path = os.path.expanduser(self._path)
 
         self.add(**kwargs)
@@ -289,7 +293,7 @@ class Directory(object):
         """
         Replace any config tokens with values from the config.
         """
-        if type(self._path) == str:
+        if isinstance(self._path, string_types):
             self._path = applicator.apply(self._path)
 
         for key in self._children:
@@ -396,7 +400,7 @@ class Directory(object):
         Add objects to the directory.
         """
         for key in kwargs:
-            if isinstance(kwargs[key], str):
+            if isinstance(kwargs[key], string_types):
                 self._children[key] = File(kwargs[key])
             else:
                 self._children[key] = kwargs[key]
@@ -409,7 +413,7 @@ class Directory(object):
                 self._children[arg.name] = arg
                 self._children[arg.name]._parent = self
                 self._children[arg.name]._env = self._env
-            elif isinstance(arg, str):
+            elif isinstance(arg, string_types):
                 f = File(arg)
                 added.append(f)
                 self._children[arg] = f
