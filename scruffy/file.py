@@ -5,7 +5,10 @@ File
 Classes for representing and performing operations on files and directories.
 """
 from __future__ import unicode_literals
-from past.builtins import basestring
+try:
+    from past.builtins import basestring
+except ImportError:
+    from builtins import basestring
 from builtins import str
 from builtins import object
 import os
