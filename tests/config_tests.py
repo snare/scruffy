@@ -1,5 +1,6 @@
 import yaml
 import os
+from six import string_types
 
 from nose.tools import *
 from scruffy import *
@@ -41,7 +42,7 @@ def test_config_object_set():
     c.derp1 = {'a': [1,2,3], 'b': 'xxx'}
     assert c.derp1.a[0] == 1
     assert c.derp1.b == 'xxx'
-    assert type(c.derp1.b) == str
+    assert isinstance(c.derp1.b, string_types)
     c['derp2.a.b.c'] = 123
     assert c.derp2.a.b.c == 123
     c.derp3.a.b.c = 666
