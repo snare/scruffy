@@ -80,9 +80,6 @@ class ConfigNode(object):
     def __le__(self, other):
         return self._get_value() <= other
 
-    def __le__(self, other):
-        return self._get_value() <= other
-
     def __eq__(self, other):
         return self._get_value() == other
 

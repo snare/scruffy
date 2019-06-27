@@ -16,7 +16,7 @@ from six import string_types
 
 from .file import Directory
 from .plugin import PluginManager
-from .config import ConfigNode, Config, ConfigEnv, ConfigApplicator
+from .config import ConfigNode, Config, ConfigEnv, ConfigApplicator, ConfigFile
 
 
 class Environment(object):
