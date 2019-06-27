@@ -70,11 +70,7 @@ class State(object):
         """
         if os.path.exists(self.path):
             with open(self.path, 'r') as f:
-                d = yaml.safe_load(f.read().replace('\t', ' '*4))
-                # don't clobber self.d if we successfully opened the state file
-                # but it was empty
-                if d:
-                    self.d = d
+                self.d = yaml.safe_load(f.read().replace('\t', ' '*4))
 
     def cleanup(self):
         """
