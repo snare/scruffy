@@ -4,7 +4,8 @@ Config
 
 Classes for loading and accessing configuration data.
 """
-from __future__ import unicode_literals
+from six import string_types
+
 import copy
 import os
 import ast
@@ -322,7 +323,7 @@ class ConfigFile(Config, File):
         """
         Save the config back to the config file.
         """
-        self.write(yaml.safe_dump(self._data))
+        self.write(yaml.safe_dump(self._data, default_flow_style=False))
 
     def prepare(self):
         """
@@ -342,7 +343,7 @@ class ConfigApplicator(object):
         """
         Apply the config to an object.
         """
-        if isinstance(obj, str):
+        if isinstance(obj, string_types):
             return self.apply_to_str(obj)
 
     def apply_to_str(self, obj):
