@@ -5,7 +5,9 @@ State
 Classes for storing a program's state.
 """
 import os
+import atexit
 import yaml
+
 
 try:
     from sqlalchemy import create_engine, Column, Integer, String
@@ -34,6 +36,7 @@ class State(object):
         self.path = path
         self.d = {}
         self.load()
+        atexit.register(self._exit_handler)
 
     def __enter__(self):
         self.load()
@@ -50,6 +53,9 @@ class State(object):
 
     def __setitem__(self, key, value):
         self.d[key] = value
+
+    def _exit_handler(self):
+        self.save()
 
     def save(self):
         """
