@@ -12,9 +12,11 @@ import errno
 import logging
 import logging.config
 
+from six import string_types
+
 from .file import Directory
 from .plugin import PluginManager
-from .config import ConfigNode, Config, ConfigEnv, ConfigApplicator
+from .config import ConfigNode, Config, ConfigEnv, ConfigApplicator, ConfigFile
 
 
 class Environment(object):
@@ -68,7 +70,7 @@ class Environment(object):
 
         # first see if we got a kwarg named 'config', as this guy is special
         if 'config' in children:
-            if type(children['config']) == str:
+            if isinstance(children['config'], string_types):
                 children['config'] = ConfigFile(children['config'])
             elif isinstance(children['config'], Config):
                 children['config'] = children['config']
@@ -103,7 +105,7 @@ class Environment(object):
         Add objects to the environment.
         """
         for key in kwargs:
-            if type(kwargs[key]) == str:
+            if isinstance(kwargs[key], string_types):
                 self._children[key] = Directory(kwargs[key])
             else:
                 self._children[key] = kwargs[key]

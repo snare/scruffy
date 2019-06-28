@@ -12,6 +12,7 @@ import ast
 import yaml
 import re
 
+from six import string_types
 from .file import File
 
 
@@ -76,9 +77,6 @@ class ConfigNode(object):
 
     def __lt__(self, other):
         return self._get_value() < other
-
-    def __le__(self, other):
-        return self._get_value() <= other
 
     def __le__(self, other):
         return self._get_value() <= other

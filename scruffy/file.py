@@ -5,8 +5,6 @@ File
 Classes for representing and performing operations on files and directories.
 """
 from __future__ import unicode_literals
-from builtins import str
-from builtins import object
 import os
 from six import string_types
 import yaml
