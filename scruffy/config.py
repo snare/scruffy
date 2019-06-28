@@ -4,12 +4,14 @@ Config
 
 Classes for loading and accessing configuration data.
 """
+from __future__ import unicode_literals
 import copy
 import os
 import ast
 import yaml
 import re
 
+from six import string_types
 from .file import File
 
 
@@ -78,9 +80,6 @@ class ConfigNode(object):
     def __le__(self, other):
         return self._get_value() <= other
 
-    def __le__(self, other):
-        return self._get_value() <= other
-
     def __eq__(self, other):
         return self._get_value() == other
 
@@ -145,7 +144,7 @@ class ConfigNode(object):
         the item referred to by the key path.
         """
         # Split up the key path
-        if type(self._path) == str:
+        if isinstance(self._path, string_types):
             key_path = self._path.split('.')
         else:
             key_path = [self._path]
@@ -295,7 +294,7 @@ class ConfigFile(Config, File):
         """
         if reload or not self._loaded:
             # load defaults
-            if self._defaults_file and type(self._defaults_file) == str:
+            if self._defaults_file and isinstance(self._defaults_file, string_types):
                 self._defaults_file = File(self._defaults_file, parent=self._parent)
             defaults = {}
             if self._defaults_file:
@@ -343,7 +342,7 @@ class ConfigApplicator(object):
         """
         Apply the config to an object.
         """
-        if type(obj) == str:
+        if isinstance(obj, str):
             return self.apply_to_str(obj)
 
     def apply_to_str(self, obj):
