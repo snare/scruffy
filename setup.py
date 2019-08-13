@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="scruffington",
-    version="0.3.7",
+    version="0.3.9",
     author="snare",
     author_email="snare@ho.ax",
     description=("The janitor"),
