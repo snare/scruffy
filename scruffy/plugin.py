@@ -5,7 +5,7 @@ Plugin
 Classes for representing and loading plugins.
 """
 import os
-import imp
+import importlib
 import six
 
 
@@ -56,9 +56,9 @@ class PluginManager(object):
             # if it's a file, load it
             modname, ext = os.path.splitext(filename)
             if os.path.isfile(filepath) and ext == '.py':
-                file, path, descr = imp.find_module(modname, [directory])
+                file, path, descr = importlib.find_module(modname, [directory])
                 if file:
-                    mod = imp.load_module(modname, file, path, descr)
+                    mod = importlib.load_module(modname, file, path, descr)
 
             # if it's a directory, recurse into it
             if os.path.isdir(filepath):
