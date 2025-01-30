@@ -5,7 +5,7 @@ with open("README.rst", "r") as fp:
 
 setup(
     name="scruffington",
-    version="0.3.8.2",
+    version="0.3.9",
     author="snare",
     author_email="snare@ho.ax",
     long_description=long_description,
