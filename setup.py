@@ -15,5 +15,9 @@ setup(
     keywords="scruffy",
     url="https://github.com/snare/scruffy",
     packages=['scruffy'],
-    install_requires=['pyyaml', 'six'],
+    install_requires=[
+        'importlib-resources>=1.1.0; python_version < "3.7"',
+        'pyyaml',
+        'six',
+    ],
 )
