@@ -12,7 +12,10 @@ import copy
 import logging
 import logging.config
 import inspect
-import pkg_resources
+try:
+    from importlib.resources import files as resources_files
+except ImportError:
+    from importlib_resources import files as resources_files
 import shutil
 
 from .plugin import PluginManager
@@ -463,6 +466,12 @@ class PackageDirectory(Directory):
 
         # if we found a package, set the path directory to the base dir for the package
         if package:
-            self._base = pkg_resources.resource_filename(package, '')
+            base = resources_files(package)
+            # It would be easier to check `isinstance(base, Path)`, but that
+            # would require dropping support for Python <3.4 in order to
+            # ensure that we can import pathlib.
+            if not hasattr(base, 'stat'):
+                raise Exception('Package %s is not on the file system', package)
+            self._base = str(base)
         else:
             raise Exception('No package found')
